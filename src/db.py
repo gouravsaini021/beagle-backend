@@ -1,8 +1,9 @@
 from databases import Database
+import os
 
-DB_STRING = "mysql://root:thinkthink@localhost/beagle"
-
-DB = Database(DB_STRING)
+DB_STRING = os.environ.get('MYSQL_STRING')
+if DB_STRING:
+    DB = Database(DB_STRING)
 
 async def initialize_tables(db: Database):
     await db.execute("""
