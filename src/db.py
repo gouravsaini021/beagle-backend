@@ -46,7 +46,7 @@ async def initialize_tables(db: Database):
     """)
     await db.execute(""" 
         CREATE TABLE IF NOT EXISTS ReceiptItems (
-            name VARCHAR(10) PRIMARY KEY DEFAULT SUBSTRING(REPLACE(UUID(), '-', ''), 1, 10),
+            name VARCHAR(10) PRIMARY KEY ,
             item_code VARCHAR(100) ,
             item_name VARCHAR(255),
             bill_item_name VARCHAR(255) NOT NULL,
