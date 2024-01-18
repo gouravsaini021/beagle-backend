@@ -5,6 +5,8 @@ from contextlib import asynccontextmanager
 from databases import Database
 from .db import initialize_tables,DB
 from .schema import CreateItems,CreateStores,Receipt
+from src.utils import generate_unique_string
+import pymysql
 
 
 
@@ -56,16 +58,23 @@ async def create_receipt_items(items):
             items['item_name']=item_details._mapping['item_name']
         else:
             raise HTTPException(status_code=400,detail="Invalid item_code "+items['item_code'])
+    
+    while True:
+        try:
+            items['name']=generate_unique_string(10)
+            await DB.execute("INSERT INTO ReceiptItems (name,item_code,item_name,bill_item_name,price,mrp,idx,receipt_id) VALUES (:name,:item_code,:item_name,:bill_item_name,:price,:mrp,:idx,:receipt_id)", values=items)
+            break
+        except pymysql.IntegrityError as e:
+            items['name']=generate_unique_string(10)
 
-    await DB.execute("INSERT INTO ReceiptItems (item_code,item_name,bill_item_name,price,mrp,idx,receipt_id) VALUES (:item_code,:item_name,:bill_item_name,:price,:mrp,:idx,:receipt_id)", values=items)
 
 async def create_receipt(receipt:Receipt):
     try:
         async with DB.transaction():
             rec=receipt.model_dump()
+            rec['store_name']=None
             rec_items=rec['receipt_items']
             if rec['store_id']:
-                rec['store_name']=None
                 store_data=await DB.fetch_one("select store_id,store_name from Store where Store.store_id= :store_id",values={'store_id':rec['store_id']})
                 if store_data:
                     rec['store_name']=store_data._mapping['store_name']
