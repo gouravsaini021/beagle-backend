@@ -1,9 +1,13 @@
 from databases import Database
 import os
+import json
 
-DB_STRING = os.environ.get('MYSQL_STRING')
-if DB_STRING:
-    DB = Database(DB_STRING)
+
+with open("/etc/config.json") as config_file:
+    config=json.load(config_file)
+
+DB=Database(config.get("MYSQL_STRING"))
+
 
 async def initialize_tables(db: Database):
     await db.execute("""
