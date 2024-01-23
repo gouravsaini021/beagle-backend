@@ -62,7 +62,7 @@ async def create_receipt_items(items):
     while True:
         try:
             items['name']=generate_unique_string(10)
-            await DB.execute("INSERT INTO ReceiptItems (name,item_code,item_name,bill_item_name,price,mrp,idx,receipt_id) VALUES (:name,:item_code,:item_name,:bill_item_name,:price,:mrp,:idx,:receipt_id)", values=items)
+            await DB.execute("INSERT INTO ReceiptItems (name,idx,bill_item_name,item_code,item_name,price,mrp,qty,receipt_id) VALUES (:name,:idx,:bill_item_name,:item_code,:item_name,:price,:mrp,:qty,:receipt_id)", values=items)
             break
         except pymysql.IntegrityError as e:
             items['name']=generate_unique_string(10)
@@ -98,7 +98,7 @@ async def create_receipt(receipt:Receipt):
 async def create_receipts(receipts:List[Receipt]):
     for receipt in receipts:
          await create_receipt(receipt=receipt)
-    return JSONResponse(content="Sucessfull", status_code=201)
+    return JSONResponse(content="Success", status_code=201)
     
 
 @app.post("/post_items")

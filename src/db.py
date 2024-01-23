@@ -51,12 +51,13 @@ async def initialize_tables(db: Database):
     await db.execute(""" 
         CREATE TABLE IF NOT EXISTS ReceiptItems (
             name VARCHAR(10) PRIMARY KEY ,
+            idx INT NOT NULL,
+            bill_item_name VARCHAR(255) NOT NULL,
             item_code VARCHAR(100) ,
             item_name VARCHAR(255),
-            bill_item_name VARCHAR(255) NOT NULL,
             price FLOAT,
             mrp FLOAT,
-            idx INT NOT NULL,
+            qty INT ,
             receipt_id INT,
             FOREIGN KEY (item_code) REFERENCES Item(item_code) ON DELETE SET NULL,
             FOREIGN KEY (receipt_id) REFERENCES Receipt(receipt_id) ON DELETE SET NULL

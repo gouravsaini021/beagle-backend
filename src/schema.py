@@ -29,9 +29,10 @@ class CreateStores(BaseModel):
     
 
 class ReceiptItems(BaseModel):
+    bill_item_name:str
+    qty: Optional[int]
     item_code:Optional[str] = None
     item_name:Optional[str] = None
-    bill_item_name:str
     price:float
     mrp:Optional[float]=None
 
