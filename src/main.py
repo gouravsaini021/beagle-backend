@@ -4,10 +4,12 @@ from typing import List
 from contextlib import asynccontextmanager
 from databases import Database
 from .db import initialize_tables,DB
-from .schema import CreateItems,CreateStores,Receipt
+from .schema import CreateItems,CreateStores,Receipt,ReceiptImage
 from src.utils import generate_unique_string
 import pymysql
-
+from fastapi.staticfiles import StaticFiles
+import base64
+import os
 
 
 @asynccontextmanager
@@ -20,6 +22,7 @@ async def lifespan(_app: FastAPI):
     
 
 app=FastAPI(lifespan=lifespan)
+app.mount("/files",StaticFiles(directory="files"),name="files")
 
 def get_mapping(items):
     rv=[]
@@ -122,5 +125,17 @@ async def create_stores(stores: CreateStores):
         raise HTTPException(status_code=400,detail=str(e))
     response_content={'message':'Stores sucessfully created','items':values}
     return JSONResponse(content=response_content, status_code=201)
-    
-    
+
+@app.post('/upload_receipt_image')
+async def upload_file(images: ReceiptImage):
+    try:
+        decoded_data=base64.b64decode(images.image_data)
+        image_type=images.image_type.split("/")[-1]
+        image_name=generate_unique_string()+"."+image_type
+        folder,subfolder="files","receipts"
+        file_path=os.path.join(folder,subfolder, image_name)
+        with open(file_path, "wb") as f:
+            f.write(decoded_data)
+        return JSONResponse(content={"message": "Image uploaded successfully","image_link":"/files/"+subfolder+"/"+image_name}, status_code=200)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error uploading image: {str(e)}")
