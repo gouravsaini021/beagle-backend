@@ -35,11 +35,12 @@ class ReceiptItems(BaseModel):
     item_name:Optional[str] = None
     price:float
     mrp:Optional[float]=None
+    amount:Optional[float]=None
 
 class Receipt(BaseModel):
     posting_date:date
     posting_time:time
-    store_receipt_no:Optional[str] = None
+    store_bill_no:Optional[str] = None
     receipt_store_name:Optional[str] = None
     total_amount:Optional[float] = None
     store_id:Optional[str] = None
