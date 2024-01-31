@@ -1,12 +1,9 @@
 from databases import Database
 import os
 import json
+from src import MYSQL_STRING
 
-
-with open("/etc/config.json") as config_file:
-    config=json.load(config_file)
-
-DB=Database(config.get("MYSQL_STRING"))
+DB=Database(MYSQL_STRING)
 
 
 async def initialize_tables(db: Database):
@@ -40,11 +37,15 @@ async def initialize_tables(db: Database):
             receipt_id INT AUTO_INCREMENT PRIMARY KEY,
             posting_date DATE,
             posting_time TIME,
-            store_receipt_no VARCHAR(100),
+            store_bill_no VARCHAR(100),
             receipt_store_name VARCHAR(100),
+            gstin VARCHAR(100),
+            address VARCHAR(255),
             total_amount FLOAT,
             store_id VARCHAR(100),
             store_name VARCHAR(255),
+            text_from_image LONGTEXT,
+            json_from_image LONGTEXT,
             FOREIGN KEY (store_id) REFERENCES Store(store_id) ON DELETE SET NULL
         );
     """)
@@ -57,9 +58,21 @@ async def initialize_tables(db: Database):
             item_name VARCHAR(255),
             price FLOAT,
             mrp FLOAT,
-            qty INT ,
+            qty FLOAT,
+            amount Float,
             receipt_id INT,
             FOREIGN KEY (item_code) REFERENCES Item(item_code) ON DELETE SET NULL,
+            FOREIGN KEY (receipt_id) REFERENCES Receipt(receipt_id) ON DELETE SET NULL
+        )
+    """)
+    await db.execute(""" 
+        CREATE TABLE IF NOT EXISTS File (
+            id INT AUTO_INCREMENT PRIMARY KEY ,
+            receipt_id INT,
+            file_name VARCHAR(100) NOT NULL,
+            link VARCHAR(100) NOT NULL,
+            folder VARCHAR(100) NOT NULL,
+            sub_folder VARCHAR(100),
             FOREIGN KEY (receipt_id) REFERENCES Receipt(receipt_id) ON DELETE SET NULL
         )
     """)
