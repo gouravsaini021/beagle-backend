@@ -5,7 +5,7 @@ from typing import List
 from contextlib import asynccontextmanager
 from databases import Database
 from .db import initialize_tables,DB
-from .schema import CreateItems,CreateStores,Receipt,ReceiptImage
+from .schema import CreateItems,CreateStores,Receipt,ReceiptImage,OrganiseReceipt
 from src import OPENAI_API_KEY
 from src.utils import generate_unique_string
 import pymysql
@@ -179,7 +179,8 @@ async def upload_file(images: ReceiptImage):
         raise HTTPException(status_code=500,detail=str(e))
 
 @app.post("/organize_receipt")
-async def organize_receipt(text: str):
+async def organize_receipt(req: OrganiseReceipt):
+    text=req.text
     response = client.chat.completions.create(
         model="gpt-3.5-turbo-1106",
         response_format={"type": "json_object"},
@@ -243,7 +244,7 @@ async def organize_receipt(text: str):
     )
     try:
         organized_data = response.choices[0].message.content
-        return organized_data
+        return JSONResponse(content=json.loads(organized_data), status_code=201)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
@@ -297,3 +298,22 @@ async def create_receipt_from_json(receipt:dict,file_id:int):
                     ele['receipt_id']=receipt_id
                     await create_receipt_items(items=ele)
     return JSONResponse(content="successfull", status_code=201)
+
+@app.delete("/stores")
+async def delete_stores():
+    try:
+        async with DB.transaction():
+            await DB.execute("Delete from Store;")
+        return JSONResponse(content="successfully delete store data", status_code=200)
+    except Exception as e:
+        raise HTTPException(status_code=500,detail=str(e))
+    
+@app.delete("/item")
+async def delete_item():
+    try:
+        async with DB.transaction():
+            await DB.execute("Delete from Item;")
+            return JSONResponse(content="successfully delete item data", status_code=200)
+    except Exception as e:
+        raise HTTPException(status_code=500,detail=str(e))
+    

@@ -43,6 +43,7 @@ class Receipt(BaseModel):
     store_bill_no:Optional[str] = None
     receipt_store_name:Optional[str] = None
     total_amount:Optional[float] = None
+    address:Optional[str] = None
     store_id:Optional[str] = None
     receipt_items:List[ReceiptItems]
 
@@ -50,8 +51,9 @@ class ReceiptImage(BaseModel):
     image_type:str
     image_name:str
     image_data:str
-    
 
+class OrganiseReceipt(BaseModel):
+    text:str
 
 
 
