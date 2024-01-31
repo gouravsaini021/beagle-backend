@@ -96,7 +96,7 @@ async def create_receipt(receipt:Receipt):
 
             if rec_items:
                 del rec['receipt_items']
-                id = await DB.execute("INSERT INTO Receipt (posting_date,posting_time,store_bill_no,receipt_store_name,total_amount,store_id,store_name) VALUES (:posting_date,:posting_time,:store_bill_no,:receipt_store_name,:total_amount,:store_id,:store_name)", values=rec)
+                id = await DB.execute("INSERT INTO Receipt (posting_date,posting_time,store_bill_no,receipt_store_name,total_amount,store_id,store_name,address) VALUES (:posting_date,:posting_time,:store_bill_no,:receipt_store_name,:total_amount,:store_id,:store_name,:address)", values=rec)
                 for count,ele in enumerate(rec_items):
                     ele['idx']=count+1
                     ele['receipt_id']=id
