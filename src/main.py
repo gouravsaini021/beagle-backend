@@ -247,7 +247,7 @@ async def organize_receipt(text: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-@app.post("/try")
+@app.post("/create_receipt_from_image_json")
 async def create_receipt_from_json(receipt:dict,file_id:int):
 
     values={"posting_date":None,"posting_time":None,"store_bill_no":None,"receipt_store_name":None,"total_amount":None,"gstin":None,"address":None,"json_from_image":json.dumps(receipt)}
