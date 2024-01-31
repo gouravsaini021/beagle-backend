@@ -1,15 +1,19 @@
-from fastapi import FastAPI,HTTPException
+from fastapi import FastAPI,HTTPException,File, UploadFile,Request
+import asyncio
 from fastapi.responses import JSONResponse
 from typing import List
 from contextlib import asynccontextmanager
 from databases import Database
 from .db import initialize_tables,DB
 from .schema import CreateItems,CreateStores,Receipt,ReceiptImage
+from src import OPENAI_API_KEY
 from src.utils import generate_unique_string
 import pymysql
 from fastapi.staticfiles import StaticFiles
 import base64
 import os
+from openai import OpenAI
+import json
 
 
 @asynccontextmanager
@@ -23,6 +27,7 @@ async def lifespan(_app: FastAPI):
 
 app=FastAPI(lifespan=lifespan)
 app.mount("/files",StaticFiles(directory="files"),name="files")
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 def get_mapping(items):
     rv=[]
@@ -54,6 +59,11 @@ async def get_items():
     return get_mapping(items)
 
 async def create_receipt_items(items):
+
+    if "item_code" not in items:
+        items['item_code']=None
+        items['item_name']=None
+
     if items['item_code']:
         items['item_name']=None
         item_details=await DB.fetch_one("select * from Item where item_code=:item_code",values={'item_code':items['item_code']})
@@ -65,7 +75,7 @@ async def create_receipt_items(items):
     while True:
         try:
             items['name']=generate_unique_string(10)
-            await DB.execute("INSERT INTO ReceiptItems (name,idx,bill_item_name,item_code,item_name,price,mrp,qty,receipt_id) VALUES (:name,:idx,:bill_item_name,:item_code,:item_name,:price,:mrp,:qty,:receipt_id)", values=items)
+            await DB.execute("INSERT INTO ReceiptItems (name,idx,bill_item_name,item_code,item_name,price,mrp,qty,amount,receipt_id) VALUES (:name,:idx,:bill_item_name,:item_code,:item_name,:price,:mrp,:qty,:amount,:receipt_id)", values=items)
             break
         except pymysql.IntegrityError as e:
             items['name']=generate_unique_string(10)
@@ -86,7 +96,7 @@ async def create_receipt(receipt:Receipt):
 
             if rec_items:
                 del rec['receipt_items']
-                id = await DB.execute("INSERT INTO Receipt (posting_date,posting_time,store_receipt_no,receipt_store_name,total_amount,store_id,store_name) VALUES (:posting_date,:posting_time,:store_receipt_no,:receipt_store_name,:total_amount,:store_id,:store_name)", values=rec)
+                id = await DB.execute("INSERT INTO Receipt (posting_date,posting_time,store_bill_no,receipt_store_name,total_amount,store_id,store_name) VALUES (:posting_date,:posting_time,:store_bill_no,:receipt_store_name,:total_amount,:store_id,:store_name)", values=rec)
                 for count,ele in enumerate(rec_items):
                     ele['idx']=count+1
                     ele['receipt_id']=id
@@ -128,14 +138,162 @@ async def create_stores(stores: CreateStores):
 
 @app.post('/upload_receipt_image')
 async def upload_file(images: ReceiptImage):
-    try:
-        decoded_data=base64.b64decode(images.image_data)
-        image_type=images.image_type.split("/")[-1]
-        image_name=generate_unique_string()+"."+image_type
+    decoded_data=base64.b64decode(images.image_data)
+    image_type=images.image_type.split("/")[-1]
+    image_name=generate_unique_string()+"."+image_type
+
+    async def save_image(decoded_data,image_type,image_name):
         folder,subfolder="files","receipts"
         file_path=os.path.join(folder,subfolder, image_name)
         with open(file_path, "wb") as f:
             f.write(decoded_data)
-        return JSONResponse(content={"message": "Image uploaded successfully","image_link":"/files/"+subfolder+"/"+image_name}, status_code=200)
+        image_link="/files/"+subfolder+"/"+image_name
+        values={"file_name":image_name,"link":image_link,"folder":folder,"sub_folder":subfolder}
+        async with DB.transaction():
+            id=await DB.execute("INSERT INTO File (file_name,link,folder,sub_folder) VALUES (:file_name,:link,:folder,:sub_folder)", values=values)
+        
+        return {"id":id,"image_link":image_link}
+    
+    async def process_receipt(base64_image):
+        system_prompt = "Extract and format all relevant fields from the following receipt image."
+        messages=[
+                {"role": "system", "content": system_prompt},
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "image_url", "image_url": f"data:image/jpeg;base64,{base64_image}"}
+                    ]
+                }
+            ]
+        response = client.chat.completions.create(
+            model="gpt-4-vision-preview",
+            messages=messages,
+            max_tokens=1000
+        )
+        return {"text": response.choices[0].message.content}
+    
+    try:
+        result = await asyncio.gather(save_image(decoded_data=decoded_data,image_type=image_type,image_name=image_name),process_receipt(base64_image=images.image_data),return_exceptions=False)
+        return JSONResponse(content=result, status_code=201)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error uploading image: {str(e)}")
+        raise HTTPException(status_code=500,detail=str(e))
+
+@app.post("/organize_receipt")
+async def organize_receipt(text: str):
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo-1106",
+        response_format={"type": "json_object"},
+        messages=[
+            {"role": "system", "content": """You are a helpful assistant designed to output JSON.you will give me field as item_name or item,qty,mrp,price,total amount,barcode or Bcode,amount,date(yyyy-mm-dd),time store_name,address,gstin,total_qty,total_items,final_amount,bill or receipt id,gstin ,user name,phone no , email feel free to leave the field empty if you cann't find field and if you find extra field plese add to json.i am also adding sample expection written below
+ {
+  "store_name": "FRESH MART",
+  "address": "#1174, 24th Main Road, Near Maranmma Temple, Parangi Pallya, HSR Layout, 2nd Sector, Bangalore - 560102",
+  "gstin": "29BCBPA3750R1ZB",
+  "bill_id": "77497",
+  "user_name": "Ashok",
+  "date": "2024-01-30",
+  "total_qty": 3,
+  "total_amount": 123.00,
+  "items": [
+    {
+      "item_name": "POTATO",
+      "qty": 2.070,
+      "mrp": null,
+      "price": 25.90,
+      "amount": 53.61,
+      "barcode": null
+    },
+    {
+      "item_name": "CARROT OOTY",
+      "qty": 0.328,
+      "mrp": null,
+      "price": 79.00,
+      "amount": 26.21,
+      "barcode": null
+    },
+    {
+      "item_name": "CAPSICUM HYBRID",
+      "qty": 0.248,
+      "mrp": null,
+      "price": 74.90,
+      "amount": 18.68,
+      "barcode": null
+    },
+    {
+      "item_name": "CABBAGE MEDIUM",
+      "qty": 0.498,
+      "mrp": null,
+      "price": 31.90,
+      "amount": 15.89,
+      "barcode": null
+    },
+    {
+      "item_name": "BEANS RINGS ROUND",
+      "qty": 0.076,
+      "mrp": null,
+      "price": 119.90,
+      "amount": 9.11,
+      "barcode": null
+    }
+  ]
+}
+"""},
+            {"role": "user", "content": text}
+        ]
+    )
+    try:
+        organized_data = response.choices[0].message.content
+        return organized_data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.post("/try")
+async def create_receipt_from_json(receipt:dict,file_id:int):
+
+    values={"posting_date":None,"posting_time":None,"store_bill_no":None,"receipt_store_name":None,"total_amount":None,"gstin":None,"address":None,"json_from_image":json.dumps(receipt)}
+    if "text_from_image" not in receipt:
+        raise HTTPException(status_code=400, detail="Cannot find text_from_image field")
+    else:
+        values["text_from_image"]=receipt["text_from_image"]
+    if "store_name" in receipt:
+        values["receipt_store_name"]=receipt["store_name"]
+    if "bill_id" in receipt:
+        values["store_bill_no"]=receipt["bill_id"]
+    if "gstin" in receipt:
+        values["gstin"]=receipt["gstin"]
+    if "address" in receipt:
+        values["address"]=receipt["address"]
+    if "total_amount" in receipt:
+        values["total_amount"]=receipt["total_amount"]
+    if "date" in receipt:
+        values["posting_date"]=receipt["date"]
+    if "time" in receipt:
+        values["posting_time"]=receipt["time"]
+    receipt_items=[]  
+    for item in receipt["items"]:
+        receipt_item={}
+        if "item_name" in item:
+            receipt_item["bill_item_name"]=item["item_name"]
+        if "qty" in item:
+            receipt_item["qty"]=item["qty"]
+        if "price" in item:
+            receipt_item["price"]=item["price"]
+        if "amount" in item:
+            receipt_item["amount"]=item["amount"]
+        else:
+            try:
+                receipt_item["amount"]=receipt_item["qty"]*receipt_item["price"]
+            except Exception:
+                pass
+        if "mrp"in item:
+            receipt_item["mrp"]=item["mrp"]
+        receipt_items.append(receipt_item)
+
+    async with DB.transaction():
+        receipt_id = await DB.execute("INSERT INTO Receipt (posting_date,posting_time,store_bill_no,receipt_store_name,total_amount,gstin,address,text_from_image,json_from_image) VALUES (:posting_date,:posting_time,:store_bill_no,:receipt_store_name,:total_amount,:gstin,:address,:text_from_image,:json_from_image)", values=values)
+        await DB.execute("UPDATE File set receipt_id=:receipt_id where id=:id",values={"id":file_id,"receipt_id":receipt_id})
+        for count,ele in enumerate(receipt_items):
+                    ele['idx']=count+1
+                    ele['receipt_id']=receipt_id
+                    await create_receipt_items(items=ele)
+    return JSONResponse(content="successfull", status_code=201)
