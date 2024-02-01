@@ -14,6 +14,7 @@ import base64
 import os
 from openai import OpenAI
 import json
+from fastapi.middleware.cors import CORSMiddleware
 
 
 @asynccontextmanager
@@ -27,6 +28,14 @@ async def lifespan(_app: FastAPI):
 
 app=FastAPI(lifespan=lifespan)
 app.mount("/files",StaticFiles(directory="files"),name="files")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Adjust this to the specific origins you want to allow
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 def get_mapping(items):
