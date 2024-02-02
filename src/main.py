@@ -30,10 +30,10 @@ app=FastAPI(lifespan=lifespan)
 app.mount("/files",StaticFiles(directory="files"),name="files")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust this to the specific origins you want to allow
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins = ["*"],  # Adjust this to the specific origins you want to allow
+    allow_credentials = True,
+    allow_methods = ["*"],
+    allow_headers = ["*"],
 )
 
 client = OpenAI(api_key=OPENAI_API_KEY)
@@ -326,3 +326,26 @@ async def delete_item():
     except Exception as e:
         raise HTTPException(status_code=500,detail=str(e))
     
+
+@app.post('/upload_receipt_image_with_id')
+async def upload_file(images: ReceiptImage,receipt_id:int):
+    decoded_data=base64.b64decode(images.image_data)
+    image_type=images.image_type.split("/")[-1]
+    image_name=str(receipt_id)+"_"+generate_unique_string()+"."+image_type
+
+    async def save_image(decoded_data,image_name,receipt_id):
+        folder,subfolder="files","receipts"
+        file_path=os.path.join(folder,subfolder, image_name)
+        with open(file_path, "wb") as f:
+            f.write(decoded_data)
+        image_link="/files/"+subfolder+"/"+image_name
+        values={"file_name":image_name,"link":image_link,"folder":folder,"sub_folder":subfolder,"receipt_id":receipt_id}
+        async with DB.transaction():
+            id=await DB.execute("INSERT INTO File (file_name,link,folder,sub_folder,receipt_id) VALUES (:file_name,:link,:folder,:sub_folder,:receipt_id)", values=values)
+        
+        return {"id":id,"image_link":image_link}
+    try:
+        result = await save_image(decoded_data=decoded_data,image_name=image_name,receipt_id=receipt_id)
+        return JSONResponse(content=result, status_code=201)
+    except Exception as e:
+        raise HTTPException(status_code=500,detail=str(e))
