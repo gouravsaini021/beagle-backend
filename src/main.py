@@ -1,4 +1,4 @@
-from fastapi import FastAPI,HTTPException,File,Request
+from fastapi import FastAPI,HTTPException,File,Request,UploadFile
 import asyncio
 from fastapi.responses import JSONResponse
 from typing import List
@@ -66,6 +66,11 @@ async def get_stores():
 async def get_items():
     items = await DB.fetch_all("select * from Item ;")
     return get_mapping(items)
+
+@app.get("/show_receipt_images")
+async def show_receipt_image():
+    receipts = await DB.fetch_all("select * from File where sub_folder='receipts' ")
+    return receipts
 
 async def create_receipt_items(items):
 
@@ -194,7 +199,7 @@ async def organize_receipt(req: OrganiseReceipt):
         model="gpt-3.5-turbo-1106",
         response_format={"type": "json_object"},
         messages=[
-            {"role": "system", "content": """You are a helpful assistant designed to output JSON.you will give me field as item_name or item,qty,mrp,price,total amount,barcode or Bcode,amount,date(yyyy-mm-dd),time store_name,address,gstin,total_qty,total_items,final_amount,bill or receipt id,gstin ,user name,phone no , email feel free to leave the field empty if you cann't find field and if you find extra field plese add to json.i am also adding sample expection written below
+            {"role": "system", "content": """You are a helpful assistant designed to output JSON.you will give me field as item_name or item ( Predict the item_name from the abbreviated name and return the full name. DO NOT MAKE UP NAMES YOURSELF.),qty,mrp,price,total amount,barcode or Bcode,amount,date(yyyy-mm-dd),time store_name,address,gstin,total_qty,total_items,final_amount,bill or receipt id,gstin ,user name,phone no , email feel free to leave the field empty if you cann't find field and if you find extra field plese add to json.i am also adding sample expection written below
  {
   "store_name": "FRESH MART",
   "address": "#1174, 24th Main Road, Near Maranmma Temple, Parangi Pallya, HSR Layout, 2nd Sector, Bangalore - 560102",
@@ -331,7 +336,7 @@ async def delete_item():
     
 
 @app.post('/upload_receipt_image_with_id')
-async def upload_file(images: ReceiptImage,receipt_id:int):
+async def upload_file_with_id(images: ReceiptImage,receipt_id:int):
     decoded_data=base64.b64decode(images.image_data)
     image_type=images.image_type.split("/")[-1]
     image_name=str(receipt_id)+"_"+generate_unique_string()+"."+image_type
