@@ -3,3 +3,4 @@ aiomysql==0.2.0
 databases==0.8.0
 uvicorn[standard]
 openai==1.10.0
+pytz
