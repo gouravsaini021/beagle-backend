@@ -68,6 +68,8 @@ async def initialize_tables(db: Database):
     await db.execute(""" 
         CREATE TABLE IF NOT EXISTS File (
             id INT AUTO_INCREMENT PRIMARY KEY ,
+            creation datetime,
+            ip VARCHAR(100),
             receipt_id INT,
             file_name VARCHAR(100) NOT NULL,
             link VARCHAR(100) NOT NULL,

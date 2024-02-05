@@ -1,13 +1,13 @@
-from fastapi import FastAPI,HTTPException,File, UploadFile,Request
+from fastapi import FastAPI,HTTPException,File,Request
 import asyncio
 from fastapi.responses import JSONResponse
 from typing import List
 from contextlib import asynccontextmanager
 from databases import Database
 from .db import initialize_tables,DB
-from .schema import CreateItems,CreateStores,Receipt,ReceiptImage,OrganiseReceipt
+from .schema import CreateItems,CreateStores,Receipt,ReceiptImage,OrganiseReceipt,FileUpload
 from src import OPENAI_API_KEY
-from src.utils import generate_unique_string
+from src.utils import generate_unique_string,ist_datetime_current
 import pymysql
 from fastapi.staticfiles import StaticFiles
 import base64
@@ -298,14 +298,17 @@ async def create_receipt_from_json(receipt:dict,file_id:int):
         if "mrp"in item:
             receipt_item["mrp"]=item["mrp"]
         receipt_items.append(receipt_item)
+    try:
+        async with DB.transaction():
+            receipt_id = await DB.execute("INSERT INTO Receipt (posting_date,posting_time,store_bill_no,receipt_store_name,total_amount,gstin,address,text_from_image,json_from_image) VALUES (:posting_date,:posting_time,:store_bill_no,:receipt_store_name,:total_amount,:gstin,:address,:text_from_image,:json_from_image)", values=values)
+            await DB.execute("UPDATE File set receipt_id=:receipt_id where id=:id",values={"id":file_id,"receipt_id":receipt_id})
+            for count,ele in enumerate(receipt_items):
+                        ele['idx']=count+1
+                        ele['receipt_id']=receipt_id
+                        await create_receipt_items(items=ele)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-    async with DB.transaction():
-        receipt_id = await DB.execute("INSERT INTO Receipt (posting_date,posting_time,store_bill_no,receipt_store_name,total_amount,gstin,address,text_from_image,json_from_image) VALUES (:posting_date,:posting_time,:store_bill_no,:receipt_store_name,:total_amount,:gstin,:address,:text_from_image,:json_from_image)", values=values)
-        await DB.execute("UPDATE File set receipt_id=:receipt_id where id=:id",values={"id":file_id,"receipt_id":receipt_id})
-        for count,ele in enumerate(receipt_items):
-                    ele['idx']=count+1
-                    ele['receipt_id']=receipt_id
-                    await create_receipt_items(items=ele)
     return JSONResponse(content="successfull", status_code=201)
 
 @app.delete("/stores")
@@ -346,6 +349,31 @@ async def upload_file(images: ReceiptImage,receipt_id:int):
         return {"id":id,"image_link":image_link}
     try:
         result = await save_image(decoded_data=decoded_data,image_name=image_name,receipt_id=receipt_id)
+        return JSONResponse(content=result, status_code=201)
+    except Exception as e:
+        raise HTTPException(status_code=500,detail=str(e))
+
+@app.post("/beaglesoftupload")
+async def create_upload_file(file:FileUpload,request:Request):
+    client_ip = request.client.host
+    decoded_data=base64.b64decode(file.file_data)
+    current_time=ist_datetime_current()
+    current_time_string=current_time.strftime("%Y%m%d_%H%M%S")
+    file_name=current_time_string+"_"+file.file_name
+
+    async def save_image(decoded_data,file_name,client_ip):
+        folder,subfolder="files","softupload"
+        file_path=os.path.join(folder,subfolder, file_name)
+        with open(file_path, "wb") as f:
+            f.write(decoded_data)
+        image_link="/files/"+subfolder+"/"+file_name
+        values={"file_name":file_name,"link":image_link,"folder":folder,"sub_folder":subfolder,"ip":client_ip,"creation":current_time}
+        async with DB.transaction():
+            id=await DB.execute("INSERT INTO File (file_name,link,folder,sub_folder,ip,creation) VALUES (:file_name,:link,:folder,:sub_folder,:ip,:creation)", values=values)
+        
+        return {"ip":client_ip,"image_link":image_link}
+    try:
+        result = await save_image(decoded_data=decoded_data,file_name=file_name,client_ip=client_ip)
         return JSONResponse(content=result, status_code=201)
     except Exception as e:
         raise HTTPException(status_code=500,detail=str(e))

@@ -55,7 +55,8 @@ class ReceiptImage(BaseModel):
 class OrganiseReceipt(BaseModel):
     text:str
 
-
-
+class FileUpload(BaseModel):
+    file_name:str
+    file_data:str
 
 
