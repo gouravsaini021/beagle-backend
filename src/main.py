@@ -1,11 +1,11 @@
-from fastapi import FastAPI,HTTPException,File,Request,UploadFile
+from fastapi import FastAPI,HTTPException,Request
 import asyncio
 from fastapi.responses import JSONResponse
 from typing import List
 from contextlib import asynccontextmanager
 from databases import Database
 from .db import initialize_tables,DB
-from .schema import CreateItems,CreateStores,Receipt,ReceiptImage,OrganiseReceipt,FileUpload
+from .schema import CreateItems,CreateStores,Receipt,ReceiptImage,OrganiseReceipt
 from src import OPENAI_API_KEY
 from src.utils import generate_unique_string,ist_datetime_current
 import pymysql
@@ -359,26 +359,21 @@ async def upload_file_with_id(images: ReceiptImage,receipt_id:int):
         raise HTTPException(status_code=500,detail=str(e))
 
 @app.post("/beaglesoftupload")
-async def create_upload_file(file:FileUpload,request:Request):
+async def beaglesoftupload(request: Request):
+    data = await request.body()
+    content_type_header = request.headers.get("Content-Type")
+    data = str(data)
     client_ip = request.client.host
-    decoded_data=base64.b64decode(file.file_data)
     current_time=ist_datetime_current()
-    current_time_string=current_time.strftime("%Y%m%d_%H%M%S")
-    file_name=current_time_string+"_"+file.file_name
-
-    async def save_image(decoded_data,file_name,client_ip):
-        folder,subfolder="files","softupload"
-        file_path=os.path.join(folder,subfolder, file_name)
-        with open(file_path, "wb") as f:
-            f.write(decoded_data)
-        image_link="/files/"+subfolder+"/"+file_name
-        values={"file_name":file_name,"link":image_link,"folder":folder,"sub_folder":subfolder,"ip":client_ip,"creation":current_time}
-        async with DB.transaction():
-            id=await DB.execute("INSERT INTO File (file_name,link,folder,sub_folder,ip,creation) VALUES (:file_name,:link,:folder,:sub_folder,:ip,:creation)", values=values)
-        
-        return {"ip":client_ip,"image_link":image_link}
+    values={"ip":client_ip,"creation":current_time,"data":data,"content_type":content_type_header}
     try:
-        result = await save_image(decoded_data=decoded_data,file_name=file_name,client_ip=client_ip)
-        return JSONResponse(content=result, status_code=201)
+        async with DB.transaction():
+                id=await DB.execute("INSERT INTO SoftUpload (ip,creation,data,content_type) VALUES (:ip,:creation,:data,:content_type)", values=values)
     except Exception as e:
         raise HTTPException(status_code=500,detail=str(e))
+    return {"id":id,"ip":client_ip}
+
+@app.get("/get_beaglesoftupload")
+async def get_beaglesoftupload():
+    soft_upload = await DB.fetch_all("select * from SoftUpload order by id desc;")
+    return soft_upload

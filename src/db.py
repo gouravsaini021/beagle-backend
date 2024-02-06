@@ -78,3 +78,12 @@ async def initialize_tables(db: Database):
             FOREIGN KEY (receipt_id) REFERENCES Receipt(receipt_id) ON DELETE SET NULL
         )
     """)
+    await db.execute(""" 
+        CREATE TABLE IF NOT EXISTS SoftUpload (
+            id INT AUTO_INCREMENT PRIMARY KEY ,
+            creation datetime,
+            ip VARCHAR(100),
+            content_type VARCHAR(255),
+            data LONGBLOB
+        )
+    """)
