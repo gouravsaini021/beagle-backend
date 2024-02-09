@@ -375,5 +375,11 @@ async def beaglesoftupload(request: Request):
 
 @app.get("/get_beaglesoftupload")
 async def get_beaglesoftupload():
-    soft_upload = await DB.fetch_all("select * from SoftUpload order by id desc;")
+    soft_upload = await DB.fetch_all("select * from SoftUpload order by id desc limit 10;")
+    return soft_upload
+
+@app.get("/get_beaglesoftupload_with_id")
+async def get_beaglesoftupload_with_id(id:int):
+    values={"id":id}
+    soft_upload = await DB.fetch_one("select * from SoftUpload where id=:id",values=values)
     return soft_upload
