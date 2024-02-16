@@ -84,6 +84,7 @@ async def initialize_tables(db: Database):
             creation datetime,
             ip VARCHAR(100),
             content_type VARCHAR(255),
-            data LONGBLOB
+            data LONGBLOB,
+            unique_id VARCHAR(100)
         )
     """)

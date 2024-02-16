@@ -362,13 +362,14 @@ async def upload_file_with_id(images: ReceiptImage,receipt_id:int):
 async def beaglesoftupload(request: Request):
     data = await request.body()
     content_type_header = request.headers.get("Content-Type")
+    unique_id=request.headers.get("UniqueId")
     data = str(data)
     client_ip = request.client.host
     current_time=ist_datetime_current()
-    values={"ip":client_ip,"creation":current_time,"data":data,"content_type":content_type_header}
+    values={"ip":client_ip,"creation":current_time,"data":data,"content_type":content_type_header,"unique_id":unique_id}
     try:
         async with DB.transaction():
-                id=await DB.execute("INSERT INTO SoftUpload (ip,creation,data,content_type) VALUES (:ip,:creation,:data,:content_type)", values=values)
+                id=await DB.execute("INSERT INTO SoftUpload (ip,creation,data,content_type,unique_id) VALUES (:ip,:creation,:data,:content_type,:unique_id)", values=values)
     except Exception as e:
         raise HTTPException(status_code=500,detail=str(e))
     return {"id":id,"ip":client_ip}
