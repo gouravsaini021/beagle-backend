@@ -388,5 +388,5 @@ async def get_beaglesoftupload_with_id(id:int):
 @app.get("/get_beaglesoftupload_with_unique_id")
 async def get_beaglesoftupload_with_unique_id(unique_id:str,n:int=1):
     values={"unique_id":unique_id,"n":n}
-    soft_upload = await DB.fetch_all("select * from SoftUpload where unique_id=:unique_id limit :n",values=values)
+    soft_upload = await DB.fetch_all("select * from SoftUpload where unique_id=:unique_id order by creation desc limit :n",values=values)
     return soft_upload
