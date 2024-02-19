@@ -85,6 +85,7 @@ async def initialize_tables(db: Database):
             ip VARCHAR(100),
             content_type VARCHAR(255),
             data LONGBLOB,
-            unique_id VARCHAR(100)
+            unique_id VARCHAR(100),
+            release_version VARCHAR(100)
         )
     """)
