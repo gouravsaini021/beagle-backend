@@ -388,6 +388,17 @@ async def get_beaglesoftupload_with_id(id:int):
 
 @app.get("/get_beaglesoftupload_with_unique_id")
 async def get_beaglesoftupload_with_unique_id(unique_id:str,n:int=1):
+    """Fetches the last `n` records from `SoftUpload` table for a given `unique_id`."""
+    if n < 1:
+        raise HTTPException(status_code=400, detail="Parameter n must be at least 1.")
+
     values={"unique_id":unique_id,"n":n}
-    soft_upload = await DB.fetch_all("select * from SoftUpload where unique_id=:unique_id order by creation desc limit :n",values=values)
+    soft_upload_id_list = await DB.fetch_all("select id from SoftUpload where unique_id=:unique_id order by creation desc limit :n",values=values)
+
+    # Check if IDs were found to avoid errors in the next query
+    if not soft_upload_id_list:
+        return []
+    
+    ids=[item['id'] for item in soft_upload_id_list]
+    soft_upload = await DB.fetch_all("select * from SoftUpload where id in :ids",values={"ids":ids})
     return soft_upload
