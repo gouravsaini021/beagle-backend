@@ -15,6 +15,7 @@ import os
 from openai import OpenAI
 import json
 from fastapi.middleware.cors import CORSMiddleware
+from .s3 import upload_to_s3,clean_file
 
 
 @asynccontextmanager
@@ -360,17 +361,26 @@ async def upload_file_with_id(images: ReceiptImage,receipt_id:int):
 
 @app.post("/beaglesoftupload")
 async def beaglesoftupload(request: Request):
+ 
     data = await request.body()
     content_type_header = request.headers.get("Content-Type")
     unique_id=request.headers.get("UniqueId")
     release_version=request.headers.get("ReleaseVer")
-    data = str(data)
+    try:
+        endswith,content=clean_file(data,content_type_header)
+    except Exception as e:
+         endswith,content=".bin",data
+    filename=generate_unique_string(12)+endswith
+
+    upload_to_s3(content=content,filename=filename)
+    file_link="https://beaglebucket.s3.amazonaws.com/" + filename
+    
     client_ip = request.client.host
     current_time=ist_datetime_current()
-    values={"ip":client_ip,"creation":current_time,"data":data,"content_type":content_type_header,"unique_id":unique_id,"release_version":release_version}
+    values={"ip":client_ip,"creation":current_time,"content_type":content_type_header,"unique_id":unique_id,"release_version":release_version,"file_path":filename,"file_extension":endswith,"file_link":file_link}
     try:
         async with DB.transaction():
-                id=await DB.execute("INSERT INTO SoftUpload (ip,creation,data,content_type,unique_id,release_version) VALUES (:ip,:creation,:data,:content_type,:unique_id,:release_version)", values=values)
+                id=await DB.execute("INSERT INTO SoftUpload (ip,creation,content_type,unique_id,release_version,file_path,file_extension,file_link) VALUES (:ip,:creation,:content_type,:unique_id,:release_version,:file_path,:file_extension,:file_link)", values=values)
     except Exception as e:
         raise HTTPException(status_code=500,detail=str(e))
     return {"id":id,"ip":client_ip}

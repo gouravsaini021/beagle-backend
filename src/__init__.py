@@ -19,3 +19,5 @@ with open(config_path) as config_file:
 
 MYSQL_STRING=config.get("MYSQL_STRING")
 OPENAI_API_KEY=config.get("OPENAI_API_KEY")
+AWS_ACCESS_KEY_ID=config.get("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY=config.get("AWS_SECRET_ACCESS_KEY")

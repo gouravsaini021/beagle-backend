@@ -4,3 +4,4 @@ databases==0.8.0
 uvicorn[standard]
 openai==1.10.0
 pytz
+requests-toolbelt

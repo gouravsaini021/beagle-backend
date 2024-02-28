@@ -86,6 +86,9 @@ async def initialize_tables(db: Database):
             content_type VARCHAR(255),
             data LONGBLOB,
             unique_id VARCHAR(100),
-            release_version VARCHAR(100)
+            release_version VARCHAR(100),
+            file_path VARCHAR(100),
+            file_extension VARCHAR(10),
+            file_link VARCHAR(100)
         )
     """)
