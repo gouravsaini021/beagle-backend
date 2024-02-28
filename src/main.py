@@ -370,7 +370,7 @@ async def beaglesoftupload(request: Request):
         endswith,content=clean_file(data,content_type_header)
     except Exception as e:
          endswith,content=".bin",data
-    filename=generate_unique_string(12)+endswith
+    filename=generate_unique_string(12) + "." + endswith
 
     upload_to_s3(content=content,filename=filename)
     file_link="https://beaglebucket.s3.amazonaws.com/" + filename

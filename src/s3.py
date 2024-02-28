@@ -11,7 +11,7 @@ def upload_to_s3(content,filename):
     s3.Object('beaglebucket',filename).put(Body=content)
 
 def clean_file(body,header):
-    endswith=".bin"
+    endswith="bin"
     boundary = body[:body.find(b'\r\n')]
     while boundary[0] == "-":
         boundary = boundary[1:]
@@ -22,9 +22,9 @@ def clean_file(body,header):
     if filename_match:
         filename = filename_match.group(1)
         if filename.endswith(".SPL"):
-                endswith=".SPL"
+                endswith="SPL"
         elif filename.endswith(".SHD"):
-                endswith=".SHD"
+                endswith="SHD"
     return endswith,content
     
     
