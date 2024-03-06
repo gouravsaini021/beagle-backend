@@ -97,7 +97,7 @@ async def initialize_tables(db: Database):
             id INT AUTO_INCREMENT PRIMARY KEY ,
             creation datetime,
             modified datetime,
-            soft_upload_id VARCHAR(50),
+            soft_upload_id INT,
             is_processed VARCHAR(1),
             image_link VARCHAR(255),
             image_path VARCHAR(255),
