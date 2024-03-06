@@ -411,7 +411,7 @@ async def get_beaglesoftupload_with_unique_id(unique_id:str,n:int=1):
 async def Print2waUpload(request: Request):
  
     content = await request.body()
-    endswith=".pdf"
+    endswith="pdf"
     content_type_header = request.headers.get("Content-Type")
     timestamp=request.headers.get("Timestamp")
     phone_number=request.headers.get("PhoneNumber")
