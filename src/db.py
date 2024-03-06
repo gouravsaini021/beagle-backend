@@ -92,3 +92,16 @@ async def initialize_tables(db: Database):
             file_link VARCHAR(100)
         )
     """)
+    await db.execute(""" 
+        CREATE TABLE IF NOT EXISTS ProcessedReceipt (
+            id INT AUTO_INCREMENT PRIMARY KEY ,
+            creation datetime,
+            modified datetime,
+            soft_upload_id VARCHAR(50),
+            is_processed VARCHAR(1),
+            image_link VARCHAR(255),
+            image_path VARCHAR(255),
+            processed_text LONGTEXT,
+            FOREIGN KEY (soft_upload_id) REFERENCES SoftUpload(id) ON DELETE SET NULL
+        )
+    """)
