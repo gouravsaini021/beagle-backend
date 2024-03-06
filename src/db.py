@@ -116,7 +116,7 @@ async def initialize_tables(db: Database):
             release_version VARCHAR(100),
             file_link VARCHAR(100),
             file_extension VARCHAR(100),
-            file_name VARCHAR(100),
+            file_path VARCHAR(100),
             content_type VARCHAR(255)
         )
     """)

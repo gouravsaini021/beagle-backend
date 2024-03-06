@@ -406,3 +406,31 @@ async def get_beaglesoftupload_with_unique_id(unique_id:str,n:int=1):
     soft_upload = await DB.fetch_all("select * from SoftUpload where file_extension='SPL' and unique_id=:unique_id order by creation desc limit :n",values=values)
 
     return soft_upload
+
+@app.post("/Print2waUpload")
+async def Print2waUpload(request: Request):
+ 
+    data = await request.body()
+    content_type_header = request.headers.get("Content-Type")
+    timestamp=request.headers.get("Timestamp")
+    phone_number=request.headers.get("PhoneNumber")
+    device_id=request.headers.get("DeviceId")
+    release_version=request.headers.get("ReleaseVersion")
+    try:
+        endswith,content=clean_file(data,content_type_header)
+    except Exception as e:
+         endswith,content=".bin",data
+    file_path="pdf/" + generate_unique_string(12) + "." + endswith
+
+    upload_to_s3(content=content,filename=file_path)
+    file_link="https://beaglebucket.s3.amazonaws.com/" + file_path
+    
+    client_ip = request.client.host
+    current_time=ist_datetime_current()
+    values={"ip":client_ip,"creation":current_time,'timestamp':timestamp,'phone_number':phone_number,'device_id':device_id,'release_version':release_version,'file_link':file_link,'file_path':file_path,'file_extension':endswith,"content_type":content_type_header}
+    try:
+        async with DB.transaction():
+                id=await DB.execute("INSERT INTO Print2wa (ip,creation,timestamp,phone_number,device_id,release_version,file_link,file_path,file_extension,content_type) VALUES (:ip,:creation,:timestamp,:phone_number,:device_id,:release_version,:file_link,:file_path,:file_extension,:content_type)", values=values)
+    except Exception as e:
+        raise HTTPException(status_code=500,detail=str(e))
+    return {"id":id,"ip":client_ip}
