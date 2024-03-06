@@ -105,3 +105,18 @@ async def initialize_tables(db: Database):
             FOREIGN KEY (soft_upload_id) REFERENCES SoftUpload(id) ON DELETE SET NULL
         )
     """)
+    await db.execute(""" 
+        CREATE TABLE IF NOT EXISTS Print2wa (
+            id INT AUTO_INCREMENT PRIMARY KEY ,
+            creation datetime,
+            timestamp datetime,
+            ip VARCHAR(50),
+            phone_number VARCHAR(50),
+            device_id VARCHAR(100),
+            release_version VARCHAR(100),
+            file_link VARCHAR(100),
+            file_extension VARCHAR(100),
+            file_name VARCHAR(100),
+            content_type VARCHAR(255)
+        )
+    """)
