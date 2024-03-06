@@ -410,16 +410,13 @@ async def get_beaglesoftupload_with_unique_id(unique_id:str,n:int=1):
 @app.post("/Print2waUpload")
 async def Print2waUpload(request: Request):
  
-    data = await request.body()
+    content = await request.body()
+    endswith=".pdf"
     content_type_header = request.headers.get("Content-Type")
     timestamp=request.headers.get("Timestamp")
     phone_number=request.headers.get("PhoneNumber")
     device_id=request.headers.get("DeviceId")
     release_version=request.headers.get("ReleaseVersion")
-    try:
-        endswith,content=clean_file(data,content_type_header)
-    except Exception as e:
-         endswith,content=".bin",data
     file_path="pdf/" + generate_unique_string(12) + "." + endswith
 
     upload_to_s3(content=content,filename=file_path)
