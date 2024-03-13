@@ -120,3 +120,52 @@ async def initialize_tables(db: Database):
             content_type VARCHAR(255)
         )
     """)
+    await db.execute(""" 
+        CREATE TABLE IF NOT EXISTS TagSoftUpload (
+            id INT AUTO_INCREMENT PRIMARY KEY ,
+            creation datetime,
+            softupload_id INT,
+            type VARCHAR(50) NOT NULL,
+            sub_type VARCHAR(50)
+        )
+    """)
+    await db.execute(""" 
+        CREATE TABLE IF NOT EXISTS StoreProfile (
+            id INT AUTO_INCREMENT PRIMARY KEY ,
+            creation datetime,
+            store_name VARCHAR(255) NOT NULL,
+            store_owner_name VARCHAR(255) NOT NULL,
+            store_owner_contact_no VARCHAR(50) NOT NULL,
+            store_landline_no VARCHAR(50),
+            address text NOT NULL,
+            locality VARCHAR(255),
+            city VARCHAR(50) NOT NULL,
+            state VARCHAR(50) NOT NULL,
+            zipcode VARCHAR(50) NOT NULL,
+            latitude VARCHAR(100) NOT NULL,
+            longitude VARCHAR(100) NOT NULL,
+            average_monthly_transaction int,
+            average_monthly_turnover int,
+            average_basket_sale_value int,
+            store_format VARCHAR(10) NOT NULL,
+            self_service VARCHAR(1) NOT NULL,
+            presence_of_shopping_cart VARCHAR(1) NOT NULL,
+            presence_of_shopping_basket VARCHAR(1) NOT NULL,
+            store_profile VARCHAR(1) NOT NULL,
+            no_of_tills int,
+            business_hours VARCHAR(100),
+            area_of_sqft INT NOT NULL,
+            average_footfall INT NOT NULL,
+            trade_profile_of_store VARCHAR(50),
+            retail_percentage INT,
+            presence_of_electronic_weighting_machine VARCHAR(1),
+            presence_of_visi_cooler VARCHAR(1),
+            presence_of_other_cooler VARCHAR(1),
+            presence_of_freezer VARCHAR(1),
+            air_cooling VARCHAR(1),
+            pos_installation_date date,
+            pos_make VARCHAR(100),
+            pos_model VARCHAR(100),
+            years_of_origin INT 
+        )
+    """)
