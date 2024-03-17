@@ -172,7 +172,7 @@ async def initialize_tables(db: Database):
     await db.execute(""" 
         CREATE TABLE IF NOT EXISTS FMCG (
             id INT AUTO_INCREMENT PRIMARY KEY ,
-            name VARCHAR(225),
+            name VARCHAR(500),
             brand VARCHAR(50),
             manufacturer VARCHAR(50),
             mrp FLOAT,
