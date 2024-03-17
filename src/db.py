@@ -169,3 +169,19 @@ async def initialize_tables(db: Database):
             years_of_origin INT 
         )
     """)
+    await db.execute(""" 
+        CREATE TABLE IF NOT EXISTS FMCG (
+            id INT AUTO_INCREMENT PRIMARY KEY ,
+            name VARCHAR(100),
+            brand VARCHAR(50),
+            manufacturer VARCHAR(50),
+            mrp FLOAT,
+            price FLOAT,
+            discount_value FLOAT,
+            discount_percentage FLOAT,
+            category_lvl_1 VARCHAR(50),
+            category_lvl_2 VARCHAR(50),
+            category_lvl_3 VARCHAR(50),
+            category_lvl_4 VARCHAR(50),
+        )
+    """)
