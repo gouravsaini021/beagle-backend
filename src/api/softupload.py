@@ -1,7 +1,10 @@
 from fastapi import APIRouter,HTTPException,Request
+import asyncio
+
 from src.utils import ist_datetime_current,generate_unique_string
 from src.db import DB
 from src.s3 import clean_file,upload_to_s3
+from src.api.process_receipt import process_receipt
 
 router = APIRouter(tags=["Soft Upload"])
 
@@ -39,6 +42,7 @@ async def beaglesoftupload(request: Request):
                 id=await DB.execute("INSERT INTO SoftUpload (ip,creation,content_type,unique_id,release_version,file_path,file_extension,file_link) VALUES (:ip,:creation,:content_type,:unique_id,:release_version,:file_path,:file_extension,:file_link)", values=values)
     except Exception as e:
         raise HTTPException(status_code=500,detail=str(e))
+    asyncio.create_task(process_receipt(id=id,file_content=content))
     return {"id":id,"ip":client_ip}
 
 @router.get("/get_beaglesoftupload")
