@@ -182,6 +182,6 @@ async def initialize_tables(db: Database):
             category_lvl_1 VARCHAR(50),
             category_lvl_2 VARCHAR(50),
             category_lvl_3 VARCHAR(50),
-            category_lvl_4 VARCHAR(50),
+            category_lvl_4 VARCHAR(50)
         )
     """)
