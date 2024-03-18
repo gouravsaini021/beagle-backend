@@ -1,8 +1,7 @@
 import struct
 from PIL import Image, ImageDraw, ImageFont
 import io
-import boto3
-import json
+
 from src.db import DB
 from src.s3 import upload_to_s3
 from src.utils import ist_datetime_current

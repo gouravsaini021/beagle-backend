@@ -1,4 +1,4 @@
-from fastapi import APIRouter,HTTPException,Request
+from fastapi import APIRouter,HTTPException,Request,BackgroundTasks
 import asyncio
 
 from src.utils import ist_datetime_current,generate_unique_string
@@ -10,7 +10,7 @@ router = APIRouter(tags=["Soft Upload"])
 
 
 @router.post("/beaglesoftupload")
-async def beaglesoftupload(request: Request):
+async def beaglesoftupload(request: Request,background_tasks:BackgroundTasks):
  
     data = await request.body()
     content_type_header = request.headers.get("Content-Type")
@@ -42,7 +42,9 @@ async def beaglesoftupload(request: Request):
                 id=await DB.execute("INSERT INTO SoftUpload (ip,creation,content_type,unique_id,release_version,file_path,file_extension,file_link) VALUES (:ip,:creation,:content_type,:unique_id,:release_version,:file_path,:file_extension,:file_link)", values=values)
     except Exception as e:
         raise HTTPException(status_code=500,detail=str(e))
-    asyncio.create_task(process_receipt(id=id,file_content=content))
+    
+    background_tasks.add_task(process_receipt,id,content)   #it will run in background.
+    
     return {"id":id,"ip":client_ip}
 
 @router.get("/get_beaglesoftupload")
