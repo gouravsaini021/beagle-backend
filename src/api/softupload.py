@@ -68,3 +68,12 @@ async def get_beaglesoftupload_with_unique_id(unique_id:str,n:int=1):
     soft_upload = await DB.fetch_all("select * from SoftUpload where file_extension='SPL' and unique_id=:unique_id order by creation desc limit :n",values=values)
 
     return soft_upload
+
+@router.get("/get_processed_receipt")
+async def get_processed_receipt(id:int):
+    """Fetches the last `n` records from `ProcessReceipt` table for a given `id`."""
+    
+    values={"id":id}
+    process_receipt = await DB.fetch_all("select * from ProcessedReceipt where id=:id ",values=values)
+
+    return process_receipt
