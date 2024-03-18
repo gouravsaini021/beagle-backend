@@ -186,7 +186,7 @@ async def process_receipt(id,file_content):
             filename=f"{id}.jpeg"
             image_path="processed_images/"+filename
             image_link='https://beaglebucket.s3.amazonaws.com/'+image_path
-            upload_to_s3(image_path,binary_image_data)
+            upload_to_s3(binary_image_data,image_path)
 
             iv={"creation":current_time,"modified":current_time,"soft_upload_id":id,"image_link":image_link,"image_path":image_path,'is_processed':1,"processed_text":text_from_image}
 
