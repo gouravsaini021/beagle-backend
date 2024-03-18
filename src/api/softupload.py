@@ -77,3 +77,10 @@ async def get_processed_receipt(id:int):
     process_receipt = await DB.fetch_all("select * from ProcessedReceipt where id=:id ",values=values)
 
     return process_receipt
+
+@router.get("/get_fmcg_data")
+async def get_fmcg_data(id:int):
+    """Fetches record from `FMCG_master` table for a given `id`."""
+    values={"id":id}
+    fmcg_data = await DB.fetch_all("select * from FMCG_Master where id=:id ",values=values)
+    return fmcg_data
