@@ -188,6 +188,7 @@ async def initialize_tables(db: Database):
     await db.execute(""" 
         CREATE TABLE IF NOT EXISTS ParsedItem (
         id INT AUTO_INCREMENT PRIMARY KEY,
+        creation datetime,
         processed_receipt_id INT,
         observed_name VARCHAR(255),
         guessed_full_name VARCHAR(255),
@@ -200,12 +201,12 @@ async def initialize_tables(db: Database):
         date VARCHAR(50),
         time VARCHAR(50),
         store_name VARCHAR(255),
-        address VARCHAR(255),
+        store_address VARCHAR(255),
+        bill_id VARCHAR(255),
         gstin VARCHAR(20),
         total_qty FLOAT,
         total_items FLOAT,
         final_amount DECIMAL(10, 2),
-        bill_id VARCHAR(255),
         store_cashier VARCHAR(255),
         store_phone_no VARCHAR(15),
         store_email VARCHAR(255),
