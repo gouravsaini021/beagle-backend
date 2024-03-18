@@ -199,7 +199,7 @@ async def organize_receipt(req: OrganiseReceipt):
         model="gpt-3.5-turbo-1106",
         response_format={"type": "json_object"},
         messages=[
-            {"role": "system", "content": """You are a helpful assistant designed to output JSON.you will give me field as item_name or item ( Predict the item_name from the abbreviated name and return the full name. DO NOT MAKE UP NAMES YOURSELF.),qty,mrp,price,total amount,barcode or Bcode,amount,date(yyyy-mm-dd),time store_name,address,gstin,total_qty,total_items,final_amount,bill or receipt id,gstin ,user name,phone no , email feel free to leave the field empty if you cann't find field and if you find extra field plese add to json.i am also adding sample expection written below
+            {"role": "system", "content": """You are a helpful assistant designed to output JSON.you will give me field as item_name or item ( Predict the item_name from the abbreviated name and return the full name. DO NOT MAKE UP NAMES YOURSELF.),qty,mrp,price,total amount,barcode or Bcode,amount,date(yyyy-mm-dd),time store_name,address,gstin,total_qty,total_items,final_amount,bill or receipt id,gstin ,user name,phone no , email feel free to leave the field empty if you cann't find field and if you find extra field plese add to json.i am also adding sample expectation written below
  {
   "store_name": "FRESH MART",
   "address": "#1174, 24th Main Road, Near Maranmma Temple, Parangi Pallya, HSR Layout, 2nd Sector, Bangalore - 560102",

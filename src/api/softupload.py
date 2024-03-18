@@ -71,7 +71,7 @@ async def get_beaglesoftupload_with_unique_id(unique_id:str,n:int=1):
 
 @router.get("/get_processed_receipt")
 async def get_processed_receipt(id:int):
-    """Fetches the last `n` records from `ProcessReceipt` table for a given `id`."""
+    """Fetches record from `ProcessReceipt` table for a given `id`."""
     
     values={"id":id}
     process_receipt = await DB.fetch_all("select * from ProcessedReceipt where id=:id ",values=values)
