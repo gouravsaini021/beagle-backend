@@ -192,16 +192,16 @@ async def initialize_tables(db: Database):
             modified datetime,
             product_code VARCHAR(100),
             name VARCHAR(500),
-            brand VARCHAR(50),
-            manufacturer VARCHAR(50),
+            brand VARCHAR(255),
+            manufacturer VARCHAR(255),
             mrp FLOAT,
             price FLOAT,
             discount_value FLOAT,
             discount_percentage FLOAT,
-            category_lvl_1 VARCHAR(50),
-            category_lvl_2 VARCHAR(50),
-            category_lvl_3 VARCHAR(50),
-            category_lvl_4 VARCHAR(50)
+            category_lvl_1 VARCHAR(255),
+            category_lvl_2 VARCHAR(255),
+            category_lvl_3 VARCHAR(255),
+            category_lvl_4 VARCHAR(255)
         )
     """)
     await db.execute(""" 
