@@ -186,12 +186,31 @@ async def initialize_tables(db: Database):
         )
     """)
     await db.execute(""" 
+        CREATE TABLE IF NOT EXISTS JioMart (
+            id INT AUTO_INCREMENT PRIMARY KEY ,
+            creation datetime,
+            modified datetime,
+            product_code VARCHAR(100),
+            name VARCHAR(500),
+            brand VARCHAR(50),
+            manufacturer VARCHAR(50),
+            mrp FLOAT,
+            price FLOAT,
+            discount_value FLOAT,
+            discount_percentage FLOAT,
+            category_lvl_1 VARCHAR(50),
+            category_lvl_2 VARCHAR(50),
+            category_lvl_3 VARCHAR(50),
+            category_lvl_4 VARCHAR(50)
+        )
+    """)
+    await db.execute(""" 
         CREATE TABLE IF NOT EXISTS ParsedItem (
         id INT AUTO_INCREMENT PRIMARY KEY,
         creation datetime,
         processed_receipt_id INT,
-        observed_name VARCHAR(255),
-        guessed_full_name VARCHAR(255),
+        observed_name VARCHAR(500),
+        guessed_full_name VARCHAR(500),
         qty FLOAT,
         uom VARCHAR(50),
         mrp DECIMAL(10, 2),
@@ -208,11 +227,11 @@ async def initialize_tables(db: Database):
         total_items FLOAT,
         final_amount DECIMAL(10, 2),
         store_cashier VARCHAR(255),
-        store_phone_no VARCHAR(15),
+        store_phone_no VARCHAR(100),
         store_email VARCHAR(255),
-        customer_phone_number VARCHAR(15),
-        mode_of_payment VARCHAR(50),
-        customer_name VARCHAR(255),
-        customer_details VARCHAR(255),
+        customer_phone_number VARCHAR(100),
+        mode_of_payment VARCHAR(500),
+        customer_name VARCHAR(500),
+        customer_details VARCHAR(500),
         FOREIGN KEY (processed_receipt_id) REFERENCES ProcessedReceipt(id) ON DELETE SET NULL
 )""")
