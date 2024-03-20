@@ -4,7 +4,7 @@ import asyncio
 from src.utils import ist_datetime_current,generate_unique_string
 from src.db import DB
 from src.s3 import clean_file,upload_to_s3
-from src.api.process_receipt import process_receipt
+from src.api.background_job import background_task_for_softupload
 
 router = APIRouter(tags=["Soft Upload"])
 
@@ -43,7 +43,7 @@ async def beaglesoftupload(request: Request,background_tasks:BackgroundTasks):
     except Exception as e:
         raise HTTPException(status_code=500,detail=str(e))
     
-    background_tasks.add_task(process_receipt,id,content)   #it will run in background.
+    background_tasks.add_task(background_task_for_softupload,id,content)   #it will run in background.
     
     return {"id":id,"ip":client_ip}
 

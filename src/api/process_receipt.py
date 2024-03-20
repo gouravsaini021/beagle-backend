@@ -1,6 +1,7 @@
 import struct
 from PIL import Image, ImageDraw, ImageFont
 import io
+from typing import Optional, Tuple , Union
 
 from src.db import DB
 from src.s3 import upload_to_s3
@@ -169,7 +170,7 @@ def emf_data_to_string(emf_data_list):
 
 
 
-async def process_receipt(id,file_content):
+async def process_receipt(id:int,file_content:bytes) -> Union[Tuple[int, str], Tuple[bool, bool]]:
 
     if file_content :
            
@@ -177,7 +178,7 @@ async def process_receipt(id,file_content):
             emf=EMF(file_content)
             emf_data=emf.emf_data
         except Exception as e:
-            return
+            return (False,False)
         
         if emf_data and emf.is_emf:
             binary_image_data=draw_emf_data_to_image(emf_data)
@@ -192,5 +193,6 @@ async def process_receipt(id,file_content):
 
             async with DB.transaction():
                     id=await DB.execute("INSERT INTO ProcessedReceipt (creation,modified,soft_upload_id,image_link,image_path,is_processed,processed_text) VALUES (:creation,:modified,:soft_upload_id,:image_link,:image_path,:is_processed,:processed_text)", values=iv)
-
-
+            
+            return (id,text_from_image)
+    return (False,False)
