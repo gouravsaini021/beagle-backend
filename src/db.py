@@ -102,6 +102,7 @@ async def initialize_tables(db: Database):
             image_link VARCHAR(255),
             image_path VARCHAR(255),
             processed_text LONGTEXT,
+            processed_json LONGTEXT,
             FOREIGN KEY (soft_upload_id) REFERENCES SoftUpload(id) ON DELETE SET NULL
         )
     """)
