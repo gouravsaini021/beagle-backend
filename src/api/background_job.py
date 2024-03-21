@@ -1,4 +1,5 @@
 import copy
+import json
 
 from src.api.process_receipt import process_receipt
 from src.api.claude import invoke_model
@@ -39,17 +40,72 @@ async def parse_receipt(id,data):
             db_fields[key] = data[key]
         except Exception as e:
             pass
-    
-    for item in data['items']:
-        db_copy=copy.copy(db_fields)
-        db_copy['processed_receipt_id']=id
-        for key in item:
-            try:
-                db_copy[key] = item[key]
-            except Exception as e:
-                pass
-        parsed_items.append(db_copy)
+
+    items_dict={
+        'observed_name': None,
+        'guessed_full_name': None,
+        'qty': None,
+        'uom': None,
+        'mrp': None,
+        'price': None,
+        'total_amount': None,
+        'barcode': None
+    }
+
+    if 'items' in data:
+        for item in data['items']:
+            if type(item)!=dict:
+                continue
+            db_copy=copy.copy(db_fields)
+            db_copy['processed_receipt_id']=id
+
+            for key in items_dict:
+                try:
+                    db_copy[key] = item[key]
+                except Exception as e:
+                    pass
+            parsed_items.append(db_copy)
     return parsed_items
+
+async def type_correction(data):
+    db_fields = {
+        'creation' : str,
+        'observed_name': str,
+        'guessed_full_name': str,
+        'qty': float,
+        'uom': str,
+        'mrp': float,
+        'price': float,
+        'total_amount': float,
+        'barcode': str,
+        'date': str,
+        'time': str,
+        'store_name': str,
+        'store_address': str,
+        'bill_id': str,
+        'gstin': str,
+        'total_qty': float,
+        'total_items': float,
+        'final_amount': float,
+        'store_cashier': str,
+        'store_phone_no': str,
+        'store_email': str,
+        'customer_phone_number': str,
+        'mode_of_payment': str,
+        'customer_name': str,
+        'customer_details': str
+        }
+    for i in data:
+        for key in i:
+            if i[key] is None:
+                continue  # Skip None values
+            if key in db_fields and type(i[key]) != db_fields[key]:
+                try:
+                    i[key] = db_fields[key](i[key])
+                except (ValueError, TypeError):
+                    i[key] = None
+                    # If conversion fails, set to None
+    return data
 
 async def insert_parsed_items(parsed_items):
     insert_query = """INSERT INTO ParsedItem 
@@ -79,8 +135,9 @@ async def update_json_to_table(id,processed_json):
 async def background_task_for_softupload(id:int,file_content:bytes):
     prc_rec_id,processed_text=await process_receipt(id,file_content)
     if prc_rec_id and processed_text:
-        processed_json=invoke_model(processed_text)
+        processed_json = invoke_model(processed_text)
         await update_json_to_table(prc_rec_id,processed_json)
-        parsed_items=await parse_receipt(prc_rec_id,processed_json)
+        parsed_items = await parse_receipt(prc_rec_id,json.loads(processed_json))
+        parsed_items = await type_correction(parsed_items)
         if parsed_items:
             await insert_parsed_items(parsed_items)
