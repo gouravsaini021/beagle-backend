@@ -8,3 +8,4 @@ requests-toolbelt
 boto3
 pillow==10.2.0
 backoff
+python-magic

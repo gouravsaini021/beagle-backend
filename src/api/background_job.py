@@ -2,6 +2,7 @@ import copy
 import json
 
 from src.api.process_receipt import process_receipt
+from src.api.file_type import add_file_tag_to_db
 from src.api.claude import invoke_model
 from src.db import DB
 from src.utils import ist_datetime_current,generate_unique_string
@@ -131,8 +132,8 @@ async def update_json_to_table(id,processed_json):
         values={'processed_json':processed_json,"id":id,"modified":current_time}
         id=await DB.execute("""UPDATE ProcessedReceipt SET processed_json = :processed_json, modified = :modified WHERE id = :id""", values=values)
 
-
 async def background_task_for_softupload(id:int,file_content:bytes):
+    await add_file_tag_to_db(id,file_content)
     prc_rec_id,processed_text=await process_receipt(id,file_content)
     if prc_rec_id and processed_text:
         processed_json = invoke_model(processed_text)
