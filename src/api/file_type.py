@@ -1,5 +1,6 @@
 import struct
 import magic
+from typing import Union,Tuple,Optional
 
 from src.db import DB
 from src.utils import ist_datetime_current,generate_unique_string
@@ -63,8 +64,9 @@ def is_TSPL_EZD(file_content:bytes):
             return True
     return False
 
-def get_file_tag(file_content:bytes):
-    file_type,file_subtype=None,None
+async def get_file_tag(file_content:bytes) -> Tuple[str, Optional[str]]:
+    file_type: str
+    file_subtype: Optional[str] = None
     emf=EMF(file_content)
     if emf.is_emf:
         file_type="EMF"
@@ -84,8 +86,7 @@ def get_file_tag(file_content:bytes):
     
     return file_type,file_subtype
 
-async def add_file_tag_to_db(id:int,file_content:bytes):
-    file_type,file_sub_type=get_file_tag(file_content)
+async def add_file_tag_to_db(id:int,file_type:str,file_sub_type):
     if file_type:
         values={"creation":ist_datetime_current(), "softupload_id":id, "type":file_type, "sub_type":file_sub_type}
         insert_query = """INSERT INTO TagSoftUpload 
@@ -93,5 +94,5 @@ async def add_file_tag_to_db(id:int,file_content:bytes):
                                 VALUES 
                                 (:creation, :softupload_id, :type, :sub_type)"""
 
-    async with DB.transaction():
-        await DB.execute(insert_query,values)
+        async with DB.transaction():
+            await DB.execute(insert_query,values)

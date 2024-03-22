@@ -1,8 +1,8 @@
 import copy
 import json
 
-from src.api.process_receipt import process_receipt
-from src.api.file_type import add_file_tag_to_db
+from src.api.process_receipt import process_emf,process_esc_p
+from src.api.file_type import add_file_tag_to_db,get_file_tag
 from src.api.claude import invoke_model
 from src.db import DB
 from src.utils import ist_datetime_current,generate_unique_string
@@ -133,8 +133,16 @@ async def update_json_to_table(id,processed_json):
         id=await DB.execute("""UPDATE ProcessedReceipt SET processed_json = :processed_json, modified = :modified WHERE id = :id""", values=values)
 
 async def background_task_for_softupload(id:int,file_content:bytes):
-    await add_file_tag_to_db(id,file_content)
-    prc_rec_id,processed_text=await process_receipt(id,file_content)
+    
+    file_type,file_sub_type = await get_file_tag(file_content)
+    await add_file_tag_to_db(id,file_type,file_sub_type)
+
+    if file_type=='EMF':
+        prc_rec_id,processed_text=await process_emf.process_receipt(id,file_content)
+
+    elif file_type=='ESC/P':
+        prc_rec_id,processed_text=await process_esc_p.process_receipt(id,file_content)
+
     if prc_rec_id and processed_text:
         processed_json = invoke_model(processed_text)
         await update_json_to_table(prc_rec_id,processed_json)
