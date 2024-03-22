@@ -133,15 +133,16 @@ async def update_json_to_table(id,processed_json):
         id=await DB.execute("""UPDATE ProcessedReceipt SET processed_json = :processed_json, modified = :modified WHERE id = :id""", values=values)
 
 async def background_task_for_softupload(id:int,file_content:bytes):
-    
+
     file_type,file_sub_type = await get_file_tag(file_content)
     await add_file_tag_to_db(id,file_type,file_sub_type)
 
     if file_type=='EMF':
         prc_rec_id,processed_text=await process_emf.process_receipt(id,file_content)
-
     elif file_type=='ESC/P':
         prc_rec_id,processed_text=await process_esc_p.process_receipt(id,file_content)
+    else:
+        return
 
     if prc_rec_id and processed_text:
         processed_json = invoke_model(processed_text)
