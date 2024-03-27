@@ -236,3 +236,12 @@ async def initialize_tables(db: Database):
         customer_details VARCHAR(500),
         FOREIGN KEY (processed_receipt_id) REFERENCES ProcessedReceipt(id) ON DELETE SET NULL
 )""")
+    await db.execute(""" 
+        CREATE TABLE IF NOT EXISTS MatchedItem (
+        parsed_item_id INT PRIMARY KEY,
+        creation DATETIME,
+        jiomart_id INT,
+        jiomart_matched VARCHAR(1),
+        FOREIGN KEY (parsed_item_id) REFERENCES ParsedItem(id) ON DELETE SET NULL,
+        FOREIGN KEY (jiomart_id) REFERENCES JioMart(id) ON DELETE SET NULL           
+)""")
