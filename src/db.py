@@ -242,6 +242,22 @@ async def initialize_tables(db: Database):
         creation DATETIME,
         jiomart_id INT,
         jiomart_matched VARCHAR(1),
-        FOREIGN KEY (parsed_item_id) REFERENCES ParsedItem(id) ON DELETE SET NULL,
+        FOREIGN KEY (parsed_item_id) REFERENCES ParsedItem(id) ON DELETE CASCADE,
         FOREIGN KEY (jiomart_id) REFERENCES JioMart(id) ON DELETE SET NULL           
 )""")
+    await db.execute(""" 
+        CREATE TABLE IF NOT EXISTS bigbasket (
+            id INT AUTO_INCREMENT PRIMARY KEY ,
+            creation datetime,
+            modified datetime,
+            name VARCHAR(500),
+            brand VARCHAR(255),
+            mrp FLOAT,
+            price FLOAT,
+            ean_code VARCHAR(255),
+            fssai_number VARCHAR(255),
+            category_lvl_1 VARCHAR(255),
+            category_lvl_2 VARCHAR(255),
+            category_lvl_3 VARCHAR(255)
+        )
+    """)
