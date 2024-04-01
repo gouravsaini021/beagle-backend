@@ -127,7 +127,8 @@ async def initialize_tables(db: Database):
             creation datetime,
             softupload_id INT,
             type VARCHAR(50) NOT NULL,
-            sub_type VARCHAR(50)
+            sub_type VARCHAR(50),
+            FOREIGN KEY (softupload_id) REFERENCES SoftUpload(id)
         )
     """)
     await db.execute(""" 
@@ -242,8 +243,11 @@ async def initialize_tables(db: Database):
         creation DATETIME,
         jiomart_id INT,
         jiomart_matched VARCHAR(1),
+        bigbasket_id INT,
+        bigbasket_matched VARCHAR(1),
         FOREIGN KEY (parsed_item_id) REFERENCES ParsedItem(id) ON DELETE CASCADE,
-        FOREIGN KEY (jiomart_id) REFERENCES JioMart(id) ON DELETE SET NULL           
+        FOREIGN KEY (jiomart_id) REFERENCES JioMart(id) ON DELETE SET NULL,
+        FOREIGN KEY (bigbasket_id) REFERENCES bigbasket(id) ON DELETE SET NULL       
 )""")
     await db.execute(""" 
         CREATE TABLE IF NOT EXISTS bigbasket (
