@@ -65,7 +65,7 @@ def is_TSPL_EZD(file_content:bytes):
     return False
 
 async def get_file_tag(file_content:bytes) -> Tuple[str, Optional[str]]:
-    file_type: str
+    file_type: str = ''
     file_subtype: Optional[str] = None
     emf=EMF(file_content)
     if emf.is_emf:
