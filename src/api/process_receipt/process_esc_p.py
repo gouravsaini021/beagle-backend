@@ -25,10 +25,10 @@ async def process_receipt(id:int,file_content:bytes) -> Union[Tuple[int, str], T
     for i in file_content:
         processed_text+=replace_non_utf8_with_space(i)
     current_time=ist_datetime_current()
-    iv={"creation":current_time,"modified":current_time,"soft_upload_id":id,'is_processed':1,"processed_text":processed_text}
+    iv={"creation":current_time,"modified":current_time,"softupload_id":id,'is_processed':1,"processed_text":processed_text}
 
     async with DB.transaction():
-            id=await DB.execute("INSERT INTO ProcessedReceipt (creation,modified,soft_upload_id,is_processed,processed_text) VALUES (:creation,:modified,:soft_upload_id,:is_processed,:processed_text)", values=iv)
+            id=await DB.execute("INSERT INTO ProcessedReceipt (creation,modified,softupload_id,is_processed,processed_text) VALUES (:creation,:modified,:softupload_id,:is_processed,:processed_text)", values=iv)
 
     return (id,processed_text)
 
