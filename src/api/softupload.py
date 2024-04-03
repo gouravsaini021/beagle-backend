@@ -84,3 +84,26 @@ async def get_fmcg_data(id:int):
     values={"id":id}
     fmcg_data = await DB.fetch_all("select * from FMCG_Master where id=:id ",values=values)
     return fmcg_data
+
+@router.get("/get_spl_by_tag")
+async def get_spl_by_tag(tag:str):
+    """
+    Fetches SPL file from the `SoftUpload` table based on a given `tag`.
+    
+    Args:
+        tag (str): The tag to filter soft uploads.
+
+    Returns:
+        List[Dict]: A list of dictionaries representing soft uploads.
+    """
+    values={"tag":tag}
+
+    soft_upload = await DB.fetch_all("""
+        SELECT su.*
+        FROM SoftUpload AS su
+        JOIN TagSoftUpload AS tsu ON tsu.softupload_id = su.id
+        WHERE file_extension = 'SPL' AND tsu.type = :tag
+        ORDER BY su.creation DESC
+    """,values=values)
+
+    return soft_upload
