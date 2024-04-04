@@ -102,7 +102,7 @@ async def get_spl_by_tag(tag:str,unique_id:str):
         SELECT su.*
         FROM SoftUpload AS su
         JOIN TagSoftUpload AS tsu ON tsu.softupload_id = su.id
-        WHERE file_extension = 'SPL' AND tsu.type = :tag and su.unique_id:unique_id
+        WHERE file_extension = 'SPL' AND tsu.type = :tag and su.unique_id = :unique_id
         ORDER BY su.creation DESC
     """,values=values)
 
