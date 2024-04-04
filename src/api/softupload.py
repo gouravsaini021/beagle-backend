@@ -97,7 +97,7 @@ async def get_spl_by_tag(tag:str,unique_id: Optional[str] = None):
     Returns:
         List[Dict]: A list of dictionaries representing soft uploads.
     """
-    values={"tag":tag, "unique_id":unique_id}
+    values={"tag":tag}
 
     query = """
         SELECT su.*
@@ -106,6 +106,7 @@ async def get_spl_by_tag(tag:str,unique_id: Optional[str] = None):
         WHERE file_extension = 'SPL' AND tsu.type = :tag
     """
     if unique_id is not None:
+        values['unique_id']=unique_id
         query += " AND su.unique_id = :unique_id"
 
     query += " ORDER BY su.creation DESC"
