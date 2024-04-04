@@ -86,9 +86,9 @@ async def get_fmcg_data(id:int):
     return fmcg_data
 
 @router.get("/get_spl_by_tag")
-async def get_spl_by_tag(tag:str):
+async def get_spl_by_tag(tag:str,unique_id:str):
     """
-    Fetches SPL file from the `SoftUpload` table based on a given `tag`.
+    Fetches SPL file from the `SoftUpload` table based on a given `tag` and unique_id.
     
     Args:
         tag (str): The tag to filter soft uploads.
@@ -96,13 +96,13 @@ async def get_spl_by_tag(tag:str):
     Returns:
         List[Dict]: A list of dictionaries representing soft uploads.
     """
-    values={"tag":tag}
+    values={"tag":tag, "unique_id":unique_id}
 
     soft_upload = await DB.fetch_all("""
         SELECT su.*
         FROM SoftUpload AS su
         JOIN TagSoftUpload AS tsu ON tsu.softupload_id = su.id
-        WHERE file_extension = 'SPL' AND tsu.type = :tag
+        WHERE file_extension = 'SPL' AND tsu.type = :tag and su.unique_id:unique_id
         ORDER BY su.creation DESC
     """,values=values)
 
