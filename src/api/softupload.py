@@ -1,5 +1,6 @@
 from fastapi import APIRouter,HTTPException,Request,BackgroundTasks
 import asyncio
+from typing import Optional
 
 from src.utils import ist_datetime_current,generate_unique_string
 from src.db import DB
@@ -86,7 +87,7 @@ async def get_fmcg_data(id:int):
     return fmcg_data
 
 @router.get("/get_spl_by_tag")
-async def get_spl_by_tag(tag:str,unique_id:str):
+async def get_spl_by_tag(tag:str,unique_id: Optional[str] = None):
     """
     Fetches SPL file from the `SoftUpload` table based on a given `tag` and unique_id.
     
@@ -98,12 +99,16 @@ async def get_spl_by_tag(tag:str,unique_id:str):
     """
     values={"tag":tag, "unique_id":unique_id}
 
-    soft_upload = await DB.fetch_all("""
+    query = """
         SELECT su.*
         FROM SoftUpload AS su
         JOIN TagSoftUpload AS tsu ON tsu.softupload_id = su.id
-        WHERE file_extension = 'SPL' AND tsu.type = :tag and su.unique_id = :unique_id
-        ORDER BY su.creation DESC
-    """,values=values)
+        WHERE file_extension = 'SPL' AND tsu.type = :tag
+    """
+    if unique_id is not None:
+        query += " AND su.unique_id = :unique_id"
 
+    query += " ORDER BY su.creation DESC"
+
+    soft_upload = await DB.fetch_all(query, values=values)
     return soft_upload
