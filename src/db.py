@@ -238,18 +238,6 @@ async def initialize_tables(db: Database):
         FOREIGN KEY (processed_receipt_id) REFERENCES ProcessedReceipt(id) ON DELETE SET NULL
 )""")
     await db.execute(""" 
-        CREATE TABLE IF NOT EXISTS MatchedItem (
-        parsed_item_id INT PRIMARY KEY,
-        creation DATETIME,
-        jiomart_id INT,
-        jiomart_matched VARCHAR(1),
-        bigbasket_id INT,
-        bigbasket_matched VARCHAR(1),
-        FOREIGN KEY (parsed_item_id) REFERENCES ParsedItem(id) ON DELETE CASCADE,
-        FOREIGN KEY (jiomart_id) REFERENCES JioMart(id) ON DELETE SET NULL,
-        FOREIGN KEY (bigbasket_id) REFERENCES bigbasket(id) ON DELETE SET NULL       
-)""")
-    await db.execute(""" 
         CREATE TABLE IF NOT EXISTS bigbasket (
             id INT AUTO_INCREMENT PRIMARY KEY ,
             creation datetime,
@@ -265,3 +253,16 @@ async def initialize_tables(db: Database):
             category_lvl_3 VARCHAR(255)
         )
     """)
+    await db.execute(""" 
+        CREATE TABLE IF NOT EXISTS MatchedItem (
+        parsed_item_id INT PRIMARY KEY,
+        creation DATETIME,
+        jiomart_id INT,
+        jiomart_matched VARCHAR(1),
+        bigbasket_id INT,
+        bigbasket_matched VARCHAR(1),
+        FOREIGN KEY (parsed_item_id) REFERENCES ParsedItem(id),
+        FOREIGN KEY (jiomart_id) REFERENCES JioMart(id) ON DELETE SET NULL,
+        FOREIGN KEY (bigbasket_id) REFERENCES bigbasket(id) ON DELETE SET NULL   
+)""")
+    
