@@ -2,6 +2,7 @@ import struct
 from PIL import Image, ImageDraw, ImageFont
 import io
 from typing import Optional, Tuple , Union
+import requests
 
 from src.db import DB
 from src.s3 import upload_to_s3
@@ -171,7 +172,8 @@ def emf_data_to_string(emf_data_list):
 
 
 async def process_receipt(id:int,file_content:bytes) -> Union[Tuple[int, str], Tuple[bool, bool]]:
-
+    current_time=ist_datetime_current()
+    iv={"creation":current_time,"modified":current_time,"softupload_id":id,"image_link":None,"image_path":None,'is_processed':0,"processed_text":None}
     if file_content :
            
         try:
@@ -179,17 +181,25 @@ async def process_receipt(id:int,file_content:bytes) -> Union[Tuple[int, str], T
             emf_data=emf.emf_data
         except Exception as e:
             return (False,False)
-        
-        if emf_data and emf.is_emf:
-            binary_image_data=draw_emf_data_to_image(emf_data)
-            text_from_image=emf_data_to_string(emf_data)
-            current_time=ist_datetime_current()
-            filename=f"{id}.jpeg"
-            image_path="processed_images/"+filename
-            image_link='https://beaglebucket.s3.amazonaws.com/'+image_path
-            upload_to_s3(binary_image_data,image_path)
 
-            iv={"creation":current_time,"modified":current_time,"softupload_id":id,"image_link":image_link,"image_path":image_path,'is_processed':1,"processed_text":text_from_image}
+        if emf.is_emf:
+            url="https://converter.beaglenetwork.com/spl2png"
+            response=requests.post(url, files={"file": file_content})
+            # Checking the response
+            if response.status_code == 200:
+                filename=f"{id}.png"
+                image_path="processed_images/"+filename
+                image_link='https://beaglebucket.s3.amazonaws.com/'+image_path
+                upload_to_s3(response.content,image_path)
+                iv['image_link']=image_link
+                iv["image_path"]=image_path
+
+        if emf_data :
+            text_from_image=emf_data_to_string(emf_data)
+            iv['processed_text']=text_from_image
+            iv['is_processed']=1
+        
+        if emf_data or emf.is_emf:
 
             async with DB.transaction():
                     id=await DB.execute("INSERT INTO ProcessedReceipt (creation,modified,softupload_id,image_link,image_path,is_processed,processed_text) VALUES (:creation,:modified,:softupload_id,:image_link,:image_path,:is_processed,:processed_text)", values=iv)
