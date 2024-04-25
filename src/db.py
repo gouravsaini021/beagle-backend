@@ -267,7 +267,7 @@ async def initialize_tables(db: Database):
 )""")
     await db.execute(""" 
         CREATE TABLE IF NOT EXISTS Heartbeat (
-        id INT AUTO_INCREMENT PRIMARY KEY
+        id INT AUTO_INCREMENT PRIMARY KEY,
         creation DATETIME,
         ip VARCHAR(100),
         unique_id VARCHAR(100),
