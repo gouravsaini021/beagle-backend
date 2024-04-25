@@ -265,4 +265,12 @@ async def initialize_tables(db: Database):
         FOREIGN KEY (jiomart_id) REFERENCES JioMart(id) ON DELETE SET NULL,
         FOREIGN KEY (bigbasket_id) REFERENCES bigbasket(id) ON DELETE SET NULL   
 )""")
+    await db.execute(""" 
+        CREATE TABLE IF NOT EXISTS Heartbeat (
+        id INT AUTO_INCREMENT PRIMARY KEY
+        creation DATETIME,
+        ip VARCHAR(100),
+        unique_id VARCHAR(100),
+        release_version VARCHAR(100)
+)""")
     

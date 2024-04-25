@@ -44,6 +44,20 @@ def get_mapping(items):
         rv.append(i._mapping)
     return rv
 
+@app.get("/heartbeat")
+async def heartbeat(request: Request):
+    unique_id=request.headers.get("UniqueId")
+    release_version=request.headers.get("ReleaseVer")
+    current_time=ist_datetime_current()
+    client_ip = request.client.host if request.client else None
+    values={"ip":client_ip,"creation":current_time,"unique_id":unique_id,"release_version":release_version}
+    try:
+        async with DB.transaction():
+                id=await DB.execute("INSERT INTO Heartbeat (ip,creation,unique_id,release_version) VALUES (:ip,:creation,:unique_id,:release_version)", values=values)
+    except Exception as e:
+        raise HTTPException(status_code=500,detail=str(e))
+    return "ok"
+
 
 @app.get("/receipts")
 async def get_receipts():
