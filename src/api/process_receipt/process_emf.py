@@ -173,6 +173,7 @@ def emf_data_to_string(emf_data_list):
 
 async def process_receipt(id:int,file_content:bytes) -> Union[Tuple[int, str], Tuple[bool, bool]]:
     current_time=ist_datetime_current()
+    text_from_image=None
     iv={"creation":current_time,"modified":current_time,"softupload_id":id,"image_link":None,"image_path":None,'is_processed':0,"processed_text":None}
     if file_content :
            
@@ -203,6 +204,7 @@ async def process_receipt(id:int,file_content:bytes) -> Union[Tuple[int, str], T
 
             async with DB.transaction():
                     id=await DB.execute("INSERT INTO ProcessedReceipt (creation,modified,softupload_id,image_link,image_path,is_processed,processed_text) VALUES (:creation,:modified,:softupload_id,:image_link,:image_path,:is_processed,:processed_text)", values=iv)
-            
+                    
+        if text_from_image:
             return (id,text_from_image)
     return (False,False)
