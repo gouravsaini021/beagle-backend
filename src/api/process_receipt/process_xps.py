@@ -44,7 +44,7 @@ async def process_receipt(id:int,file_content:bytes) -> Union[Tuple[int, str], T
         Extract text from XPS file.
         """
         url="https://converter.beaglenetwork.com/xps2txt"
-        response = requests.get(url, files={"file": ("{id}.xps",file_content)})
+        response = requests.get(url, files={"file": (f"{id}.xps",file_content)})
         if response.status_code == 200:
             if len(response.text)<5:
                 text_from_xps=response.text
