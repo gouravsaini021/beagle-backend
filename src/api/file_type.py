@@ -83,7 +83,7 @@ async def get_file_tag(file_content:bytes) -> Tuple[str, Optional[str]]:
         file_type='XPS'
     elif is_TSPL_EZD(file_content):
         file_type='TSPL-EZ'
-    elif file_content[:4]==b'\x1b\x3d\x01\x1d':
+    elif file_content[:4]==b'\x1b\x3d\x01\x1d' or file_content[:2]==b'\x1b\x1d':
         file_type='ESC/POS'
     elif file_content[:4]==b'ZIMF':
         file_type='ZIMF'
