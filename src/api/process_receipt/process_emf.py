@@ -184,7 +184,7 @@ async def process_receipt(id:int,file_content:bytes) -> Union[Tuple[int, str], T
             return (False,False)
 
         if emf.is_emf:
-            url="https://converter.beaglenetwork.com/spl2png"
+            url="https://converter.beaglenetwork.com/emfspool_to_png"
             response=requests.post(url, files={"file": file_content})
             # Checking the response
             if response.status_code == 200:
