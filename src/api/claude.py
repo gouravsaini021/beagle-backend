@@ -82,7 +82,6 @@ def need_to_retry(e):
 
 @backoff.on_exception(backoff.expo, Exception, max_tries=5, giveup=need_to_retry)
 def invoke_model(prompt):
-    print(prompt)
     try:
         response = client.invoke_model(
             modelId=model_id,
