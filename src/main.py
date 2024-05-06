@@ -16,6 +16,7 @@ from openai import OpenAI
 import json
 from fastapi.middleware.cors import CORSMiddleware
 from src.api import softupload,print2wa
+import sentry_sdk
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -23,6 +24,17 @@ async def lifespan(_app: FastAPI):
     await initialize_tables(DB)
     yield
     await DB.disconnect()
+
+sentry_sdk.init(
+    dsn="https://55c726ce37e4f6fa23de011c546731ad@o4507208886386688.ingest.us.sentry.io/4507208890253312",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
+)
 
     
 
