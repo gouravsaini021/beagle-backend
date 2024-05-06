@@ -30,6 +30,7 @@ sentry_sdk.init(
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for performance monitoring.
     traces_sample_rate=1.0,
+    enable_tracing=True,
     # Set profiles_sample_rate to 1.0 to profile 100%
     # of sampled transactions.
     # We recommend adjusting this value in production.
@@ -55,6 +56,10 @@ def get_mapping(items):
     for i in items:
         rv.append(i._mapping)
     return rv
+
+@app.get("/sentry-debug")
+async def trigger_error():
+    division_by_zero = 1 / 0
 
 @app.get("/heartbeat")
 async def heartbeat(request: Request):
