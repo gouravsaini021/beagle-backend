@@ -2,7 +2,7 @@ import struct
 from PIL import Image, ImageDraw, ImageFont
 import io
 from typing import Optional, Tuple , Union
-import requests
+import httpx
 
 from src.db import DB
 from src.s3 import upload_to_s3
@@ -184,16 +184,17 @@ async def process_receipt(id:int,file_content:bytes) -> Union[Tuple[int, str], T
             return (False,False)
 
         if emf.is_emf:
-            url="https://converter.beaglenetwork.com/emfspool_to_png"
-            response=requests.post(url, files={"file": file_content})
-            # Checking the response
-            if response.status_code == 200:
-                filename=f"{id}.png"
-                image_path="processed_images/"+filename
-                image_link='https://beaglebucket.s3.amazonaws.com/'+image_path
-                upload_to_s3(response.content,image_path)
-                iv['image_link']=image_link
-                iv["image_path"]=image_path
+            async with httpx.AsyncClient() as client:
+                url="https://converter.beaglenetwork.com/emfspool_to_png"
+                response=await client.post(url, files={"file": file_content})
+                # Checking the response
+                if response.status_code == 200:
+                    filename=f"{id}.png"
+                    image_path="processed_images/"+filename
+                    image_link='https://beaglebucket.s3.amazonaws.com/'+image_path
+                    upload_to_s3(response.content,image_path)
+                    iv['image_link']=image_link
+                    iv["image_path"]=image_path
 
         if emf_data :
             text_from_image=emf_data_to_string(emf_data)
