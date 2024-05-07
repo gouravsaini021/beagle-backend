@@ -11,3 +11,4 @@ backoff
 python-magic
 httpx
 requests
+sentry-sdk[fastapi]
