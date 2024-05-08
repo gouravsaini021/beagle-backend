@@ -158,6 +158,7 @@ async def background_task_for_softupload(id:int,file_content:bytes):
             parsed_items = await parse_receipt(prc_rec_id,json.loads(processed_json))
         except json.JSONDecodeError as e:
             logger.error(f"JSON decoding error for processed_receipt_id {prc_rec_id}: {e}" )
+            return
         except Exception as e:
             logger.error("An unexpected error occurred: %s", e)
             raise
