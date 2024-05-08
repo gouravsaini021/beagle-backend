@@ -211,7 +211,7 @@ async def process_receipt(id:int,file_content:bytes) -> Union[Tuple[int, str], T
             iv['processed_text']=text_from_image
             iv['is_processed']=1
         
-        if emf_data or emf.is_emf:
+        if iv['processed_text'] or iv["image_link"]:
 
             async with DB.transaction():
                     id=await DB.execute("INSERT INTO ProcessedReceipt (creation,modified,softupload_id,image_link,image_path,is_processed,processed_text) VALUES (:creation,:modified,:softupload_id,:image_link,:image_path,:is_processed,:processed_text)", values=iv)

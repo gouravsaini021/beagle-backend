@@ -1,11 +1,16 @@
 import copy
 import json
+import logging,asyncio
+from fastapi.concurrency import run_in_threadpool
 
 from src.api.process_receipt import process_emf,process_esc_p,process_xps
 from src.api.file_type import add_file_tag_to_db,get_file_tag
 from src.api.claude import invoke_model
 from src.db import DB
 from src.utils import ist_datetime_current,generate_unique_string
+
+logging.basicConfig(level=logging.INFO)  # Set the logging level
+logger = logging.getLogger(__name__)
 
 async def parse_receipt(id,data):
     parsed_items=[]
@@ -147,9 +152,16 @@ async def background_task_for_softupload(id:int,file_content:bytes):
         return
 
     if prc_rec_id and processed_text:
-        processed_json = invoke_model(processed_text)
+        processed_json = await run_in_threadpool(lambda:invoke_model(processed_text))
         await update_json_to_table(prc_rec_id,processed_json)
-        parsed_items = await parse_receipt(prc_rec_id,json.loads(processed_json))
+        try:
+            parsed_items = await parse_receipt(prc_rec_id,json.loads(processed_json))
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON decoding error for processed_receipt_id {prc_rec_id}: {e}" )
+        except Exception as e:
+            logger.error("An unexpected error occurred: %s", e)
+            raise
+
         parsed_items = await type_correction(parsed_items)
         if parsed_items:
             await insert_parsed_items(parsed_items)
