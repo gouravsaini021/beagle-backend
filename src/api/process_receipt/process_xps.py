@@ -1,10 +1,14 @@
 from typing import Optional, Tuple , Union
 import httpx
 import asyncio
+import logging
 
 from src.utils import ist_datetime_current
 from src.db import DB
 from src.s3 import upload_to_s3
+
+logging.basicConfig(level=logging.INFO)  # Set the logging level
+logger = logging.getLogger(__name__)
 
 
 async def process_receipt(id:int,file_content:bytes) -> Union[Tuple[int, str], Tuple[bool, bool] , Tuple[int,None]]:
@@ -55,8 +59,12 @@ async def process_receipt(id:int,file_content:bytes) -> Union[Tuple[int, str], T
     
     try:
         result = await asyncio.gather(convert_to_image(),extract_text(),return_exceptions=False)
-    except Exception as e:
-        raise e
+    except httpx.TimeoutException as exc:
+        logger.error("Request timed out: %s", exc)
+    except httpx.HTTPStatusError as exc:
+        logger.error("HTTP error: %s, Response: %s", exc, exc.response)
+    except httpx.RequestError as exc:
+        logger.error("Request error: %s", exc)
     
     # If either image link or processed text is available, insert into the database
     if iv["image_link"] or iv["processed_text"]:
