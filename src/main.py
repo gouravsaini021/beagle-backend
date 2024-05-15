@@ -1,4 +1,4 @@
-from fastapi import FastAPI,HTTPException,Request
+from fastapi import FastAPI,HTTPException,Request,File, UploadFile
 import asyncio
 from fastapi.responses import JSONResponse
 from typing import List
@@ -17,6 +17,7 @@ import json
 from fastapi.middleware.cors import CORSMiddleware
 from src.api import softupload,print2wa
 import sentry_sdk
+from src.s3 import upload_to_s3
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -75,6 +76,37 @@ async def heartbeat(request: Request):
         raise HTTPException(status_code=500,detail=str(e))
     return "ok"
 
+@app.post("/heartbeat")
+async def post_heartbeat(request:Request,file: UploadFile = File(...)):
+    # Check if the file was uploaded
+    if not file:
+        return JSONResponse(status_code=400, content={"message": "No file provided"})
+    unique_id=request.headers.get("UniqueId")
+    release_version=request.headers.get("ReleaseVer")
+    # Here, you can process the uploaded file
+    content = await file.read()
+    _, extension = os.path.splitext(str(file.filename))
+    filename="heartbeat/"+generate_unique_string(12) + extension
+    upload_to_s3(content=content,filename=filename)
+    file_link="https://beaglebucket.s3.amazonaws.com/" + filename
+    client_ip = request.client.host if request.client else None
+    current_time=ist_datetime_current()
+
+    values={
+         "ip":client_ip,
+         "creation":current_time,
+         "unique_id":unique_id,
+         "release_version":release_version,
+         "file_path":filename,
+         "file_extension":extension[1:],
+         "file_link":file_link
+         }
+    try:
+        async with DB.transaction():
+            id=await DB.execute("INSERT INTO HeartbeatUpload (ip,creation,unique_id,release_version,file_path,file_extension,file_link) VALUES (:ip,:creation,:unique_id,:release_version,:file_path,:file_extension,:file_link)", values=values)
+    except Exception as e:
+        raise HTTPException(status_code=500,detail=str(e))
+    return {"id":id,"ip":client_ip}
 
 @app.get("/receipts")
 async def get_receipts():

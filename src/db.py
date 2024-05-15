@@ -273,4 +273,15 @@ async def initialize_tables(db: Database):
         unique_id VARCHAR(100),
         release_version VARCHAR(100)
 )""")
-    
+    await db.execute(""" 
+        CREATE TABLE IF NOT EXISTS HeartbeatUpload (
+            id INT AUTO_INCREMENT PRIMARY KEY ,
+            creation datetime,
+            ip VARCHAR(100),
+            unique_id VARCHAR(100),
+            release_version VARCHAR(100),
+            file_path VARCHAR(100),
+            file_extension VARCHAR(10),
+            file_link VARCHAR(100)
+        )
+    """)
