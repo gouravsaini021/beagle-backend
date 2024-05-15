@@ -9,6 +9,7 @@ from src.api.background_job import background_task_for_softupload
 
 router = APIRouter(tags=["Soft Upload"])
 
+BLOCKED_BIN_FOR_UNIQUE_ID=["BFEBFBFF000206A7FEDV65BG23WEM2DXS7RFRHA0M6R8Z3W2VMVYX6QE3RRRATKW6Y90"]
 
 @router.post("/beaglesoftupload")
 async def beaglesoftupload(request: Request,background_tasks:BackgroundTasks):
@@ -21,6 +22,10 @@ async def beaglesoftupload(request: Request,background_tasks:BackgroundTasks):
         endswith,content=clean_file(data,content_type_header)
     except Exception as e:
          endswith,content=".bin",data
+    if unique_id in BLOCKED_BIN_FOR_UNIQUE_ID and endswith=='.bin':
+        return
+    if not content:
+        return
     filename=generate_unique_string(12) + "." + endswith
 
     upload_to_s3(content=content,filename=filename)
