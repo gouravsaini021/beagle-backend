@@ -21,8 +21,8 @@ async def beaglesoftupload(request: Request,background_tasks:BackgroundTasks):
     try:
         endswith,content=clean_file(data,content_type_header)
     except Exception as e:
-         endswith,content=".bin",data
-    if unique_id in BLOCKED_BIN_FOR_UNIQUE_ID and endswith=='.bin':
+         endswith,content="bin",data
+    if unique_id in BLOCKED_BIN_FOR_UNIQUE_ID and endswith=='bin':
         return
     if not content:
         return
