@@ -67,12 +67,14 @@ class EMF:
 
         length=len(emf)
         while length>0:
-            type,size=struct.unpack("2I",emf[:8])
-            if type==84:
+            emf_type,size=struct.unpack("2I",emf[:8])
+            if size==0:
+                break
+            if emf_type==84:
                 self.EMRExtTextOutW(emf[:size])
-            if type==82:
+            if emf_type==82:
                  self.EMR_EXTCREATEFONTINDIRECTW(emf[:size])
-            if type==88:
+            if emf_type==88:
                 pass
             emf=emf[size:]
             length-=size

@@ -12,3 +12,4 @@ python-magic
 httpx
 requests
 sentry-sdk[fastapi]
+python-multipart

@@ -38,6 +38,8 @@ class EMF:
         length=len(emf)
         while length>0:
             emf_type,size=struct.unpack("2I",emf[:8])
+            if size==0:
+                break
             if emf_type==83:
                 self.emf_subtype.add("EXTTEXTOUTA")
             elif emf_type==84:
