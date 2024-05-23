@@ -1,6 +1,7 @@
 from fastapi import APIRouter,HTTPException,Request,BackgroundTasks
 import asyncio
 from typing import Optional
+import httpx
 
 from src.utils import ist_datetime_current,generate_unique_string
 from src.db import DB
@@ -10,6 +11,16 @@ from src.api.background_job import background_task_for_softupload
 router = APIRouter(tags=["Soft Upload"])
 
 BLOCKED_BIN_FOR_UNIQUE_ID=["BFEBFBFF000206A7FEDV65BG23WEM2DXS7RFRHA0M6R8Z3W2VMVYX6QE3RRRATKW6Y90"]
+
+async def upload_to_process_server(softupload_id,content):
+    try:
+        async with httpx.AsyncClient() as client:
+            url="http://backend-beagle.eastus.cloudapp.azure.com/process"
+            params = {"softupload_id": softupload_id}
+            response=await client.post(url,params=params,files={"file": content})
+    except Exception as e:
+        print(e)
+        raise
 
 @router.post("/beaglesoftupload")
 async def beaglesoftupload(request: Request,background_tasks:BackgroundTasks):
@@ -45,13 +56,13 @@ async def beaglesoftupload(request: Request,background_tasks:BackgroundTasks):
          }
     try:
         async with DB.transaction():
-                id=await DB.execute("INSERT INTO SoftUpload (ip,creation,content_type,unique_id,release_version,file_path,file_extension,file_link) VALUES (:ip,:creation,:content_type,:unique_id,:release_version,:file_path,:file_extension,:file_link)", values=values)
+                softupload_id=await DB.execute("INSERT INTO SoftUpload (ip,creation,content_type,unique_id,release_version,file_path,file_extension,file_link) VALUES (:ip,:creation,:content_type,:unique_id,:release_version,:file_path,:file_extension,:file_link)", values=values)
     except Exception as e:
         raise HTTPException(status_code=500,detail=str(e))
     
-    background_tasks.add_task(background_task_for_softupload,id,content)   #it will run in background.
+    background_tasks.add_task(upload_to_process_server,softupload_id,content)   #it will run in background.
     
-    return {"id":id,"ip":client_ip}
+    return {"id":softupload_id,"ip":client_ip}
 
 @router.get("/get_beaglesoftupload")
 async def get_beaglesoftupload():
