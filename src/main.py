@@ -41,7 +41,6 @@ sentry_sdk.init(
     
 
 app=FastAPI(lifespan=lifespan)
-app.mount("/files",StaticFiles(directory="files"),name="files")
 app.add_middleware(
     CORSMiddleware,
     allow_origins = ["*"],  # Adjust this to the specific origins you want to allow
