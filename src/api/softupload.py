@@ -15,11 +15,10 @@ BLOCKED_BIN_FOR_UNIQUE_ID=["BFEBFBFF000206A7FEDV65BG23WEM2DXS7RFRHA0M6R8Z3W2VMVY
 async def upload_to_process_server(softupload_id,content):
     try:
         async with httpx.AsyncClient() as client:
-            url="http://backend-beagle.eastus.cloudapp.azure.com/process"
+            url="https://backend.beaglenetwork.com/process"
             params = {"softupload_id": softupload_id}
             response=await client.post(url,params=params,files={"file": content})
     except Exception as e:
-        print(e)
         raise
 
 @router.post("/beaglesoftupload")
