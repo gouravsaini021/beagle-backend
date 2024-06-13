@@ -13,3 +13,4 @@ httpx
 requests
 sentry-sdk[fastapi]
 python-multipart
+azure-storage-blob

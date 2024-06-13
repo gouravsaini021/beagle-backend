@@ -1,14 +1,20 @@
 import boto3
 from requests_toolbelt.multipart import decoder
 import re
+from azure.storage.blob import BlobClient
 
-
-
+def upload_to_azure(content,filepath):
+    from src import AZURE_CONNECTION_STRING,AZURE_CONTAINER
+    blob = BlobClient.from_connection_string(conn_str=AZURE_CONNECTION_STRING, container_name=AZURE_CONTAINER, blob_name=filepath)
+    blob.upload_blob(content)
+    return blob.url
 
 def upload_to_s3(content,filename):
+    upload_to_azure(content=content,filepath=filename)
     from src import AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY
     s3 = boto3.resource('s3',aws_access_key_id=AWS_ACCESS_KEY_ID,aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
     s3.Object('beaglebucket',filename).put(Body=content)
+
 
 def clean_file(body,header):
     endswith="bin"
