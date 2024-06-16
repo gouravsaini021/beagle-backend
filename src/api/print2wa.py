@@ -3,7 +3,7 @@ from typing import Dict,Union,Optional
 
 from src.db import DB
 from src.utils import generate_unique_string,ist_datetime_current
-from src.s3 import upload_to_s3
+from src.s3 import upload_to_azure
 
 router=APIRouter(tags=["Print2waUpload"])
 
@@ -18,8 +18,7 @@ async def Print2waUpload(request: Request) -> Dict[str, Union[str, int, None]]:
     release_version=request.headers.get("ReleaseVersion")
     file_path="pdf/" + generate_unique_string(12) + "." + endswith
 
-    upload_to_s3(content=content,filename=file_path)
-    file_link="https://beaglebucket.s3.amazonaws.com/" + file_path
+    file_link=upload_to_azure(content=content,filepath=file_path)
     
     client_ip: Optional[str] = request.client.host if request.client else None
     current_time=ist_datetime_current()

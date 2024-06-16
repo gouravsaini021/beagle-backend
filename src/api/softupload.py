@@ -5,8 +5,7 @@ import httpx
 
 from src.utils import ist_datetime_current,generate_unique_string
 from src.db import DB
-from src.s3 import clean_file,upload_to_s3
-from src.api.background_job import background_task_for_softupload
+from src.s3 import clean_file,upload_to_azure
 
 router = APIRouter(tags=["Soft Upload"])
 
@@ -39,8 +38,7 @@ async def beaglesoftupload(request: Request,background_tasks:BackgroundTasks):
         return
     filename=generate_unique_string(12) + "." + endswith
     
-    upload_to_s3(content=content,filename=filename)
-    file_link="https://beaglebucket.s3.amazonaws.com/" + filename
+    file_link=upload_to_azure(content=content,filepath=filename)
     
     client_ip = request.client.host if request.client else None
     current_time=ist_datetime_current()

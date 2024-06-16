@@ -5,7 +5,6 @@ from typing import List
 from contextlib import asynccontextmanager
 from databases import Database
 from .db import initialize_tables,DB
-from .schema import CreateItems,CreateStores,Receipt,ReceiptImage,OrganiseReceipt
 from src import OPENAI_API_KEY
 from src.utils import generate_unique_string,ist_datetime_current
 import pymysql
@@ -17,7 +16,7 @@ import json
 from fastapi.middleware.cors import CORSMiddleware
 from src.api import softupload,print2wa
 import sentry_sdk
-from src.s3 import upload_to_s3
+from src.s3 import upload_to_azure
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -86,8 +85,7 @@ async def post_heartbeat(request:Request,file: UploadFile = File(...)):
     content = await file.read()
     _, extension = os.path.splitext(str(file.filename))
     filename="heartbeat/"+generate_unique_string(12) + extension
-    upload_to_s3(content=content,filename=filename)
-    file_link="https://beaglebucket.s3.amazonaws.com/" + filename
+    file_link=upload_to_azure(content=content,filepath=filename)
     client_ip = request.client.host if request.client else None
     current_time=ist_datetime_current()
 
