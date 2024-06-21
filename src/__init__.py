@@ -9,7 +9,7 @@ if not os.path.exists(config_path):
     with open(config_path, 'w') as config_file:
         # Write some default data into the file
         default_data = {
-            "MYSQL_STRING": "mysql://root:put_your_password@localhost/beagle",
+            "MYSQL_STRING": "mysql+aiomysql://put_username:put_your_password@localhost/database_name",
             "OPENAI_API_KEY": "your_default_openai_api_key",
             "AZURE_CONNECTION_STRING": "your_azure_blob_connection_string",
             "AZURE_CONTAINER":"beaglebucket",

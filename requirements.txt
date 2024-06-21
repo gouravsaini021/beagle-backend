@@ -1,8 +1,6 @@
 fastapi===0.109.0
 aiomysql==0.2.0
-databases==0.8.0
 uvicorn[standard]
-openai==1.10.0
 pytz
 requests-toolbelt
 boto3
@@ -14,3 +12,4 @@ requests
 sentry-sdk[fastapi]
 python-multipart
 azure-storage-blob
+sqlalchemy==2.0.31
