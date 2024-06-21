@@ -44,6 +44,7 @@ async def beaglesoftupload(request: Request,background_tasks:BackgroundTasks,db:
     client_ip = request.client.host if request.client else None
 
     softupload = SoftUpload(
+        creation=ist_datetime_current(),
         ip=client_ip,
         content_type=content_type_header,
         unique_id=unique_id,
