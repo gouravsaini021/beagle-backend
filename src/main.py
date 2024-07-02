@@ -34,7 +34,7 @@ sentry_sdk.init(
 
     
 
-app=FastAPI(lifespan=lifespan)
+app=FastAPI(lifespan=lifespan,docs_url=None, redoc_url=None)
 app.add_middleware(
     CORSMiddleware,
     allow_origins = ["*"],  # Adjust this to the specific origins you want to allow
